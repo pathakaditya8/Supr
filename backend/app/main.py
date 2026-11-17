@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 import secrets
@@ -11,6 +12,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session, selectinload
 
+from . import keepalive
 from . import models as m
 from . import schemas as s
 from .config import ALLOWED_ORIGINS, UPLOAD_DIR
@@ -21,7 +23,10 @@ from .security import hash_password, issue_token, read_token, verify_password
 @asynccontextmanager
 async def lifespan(app):
     Base.metadata.create_all(bind=engine)
+    url = keepalive.target_url()
+    task = asyncio.create_task(keepalive.run(url)) if url else None
     yield
+    if task: task.cancel()
 
 app = FastAPI(title="Supr BMU Campus Market API", version="1.0.0", lifespan=lifespan)
 app.add_middleware(CORSMiddleware, allow_origins=ALLOWED_ORIGINS, allow_credentials=True, allow_methods=["GET","POST","PATCH","PUT","DELETE"], allow_headers=["Authorization","Content-Type"])

@@ -235,3 +235,14 @@ def test_error_responses_do_not_leak_internals(client, auth_headers):
     assert r.status_code in (404, 409)
     for leak in ("traceback", "sqlalchemy", "select ", "password_hash", "secret"):
         assert leak not in body
+
+
+def test_keep_alive_is_off_by_default_and_only_uses_https(monkeypatch):
+    from app import keepalive
+    monkeypatch.delenv("KEEP_ALIVE", raising=False)
+    assert keepalive.target_url() is None
+    monkeypatch.setenv("KEEP_ALIVE", "true")
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "http://insecure.example")
+    assert keepalive.target_url() is None
+    monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://supr-api.onrender.com/")
+    assert keepalive.target_url() == "https://supr-api.onrender.com/api/health"

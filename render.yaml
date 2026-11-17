@@ -20,6 +20,8 @@ services:
         generateValue: true         # signs login tokens; Render creates a long random value
       - key: ACCESS_TOKEN_MINUTES
         value: "60"
+      - key: KEEP_ALIVE
+        value: "true"                 # app pings its own /api/health every 10 minutes so the free instance stays awake
       - key: ALLOWED_ORIGINS
         sync: false                 # set to your Vercel address, e.g. https://supr-bmu.vercel.app
 
