@@ -264,3 +264,26 @@ def test_change_password_requires_current_password_and_works(client):
     # restore so later tests in the session still sign in with the demo password
     back = client.post("/api/auth/change-password", headers=headers, json={"current_password": "Another-pass-123", "new_password": "Demo@12345"})
     assert back.status_code == 200
+
+
+def test_admin_can_set_student_and_vendor_passwords_but_nobody_else_can(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    student = login(client, "student@supr.bmu.edu.in")
+    vendor = login(client, "kathijunction@supr.demo")
+    ids = {u["email"]: u["id"] for u in client.get("/api/admin/students", headers=admin).json()}
+    student_id = ids["student@supr.bmu.edu.in"]
+    vendor_id = client.get("/api/admin/applications", headers=admin).json()
+    vendor_user = next(a["user_id"] for a in vendor_id if a["email"] == "kathijunction@supr.demo")
+    new = {"new_password": "Reset-by-admin-1"}
+    assert client.post(f"/api/admin/users/{student_id}/password", headers=student, json=new).status_code == 403
+    assert client.post(f"/api/admin/users/{student_id}/password", headers=vendor, json=new).status_code == 403
+    assert client.post(f"/api/admin/users/{student_id}/password", json=new).status_code in (401, 403)
+    assert client.post(f"/api/admin/users/{student_id}/password", headers=admin, json={"new_password": "short"}).status_code == 422
+    for uid, email in ((student_id, "student@supr.bmu.edu.in"), (vendor_user, "kathijunction@supr.demo")):
+        assert client.post(f"/api/admin/users/{uid}/password", headers=admin, json=new).status_code == 200
+        assert client.post("/api/auth/login", json={"email": email, "password": "Demo@12345"}).status_code == 401
+        assert client.post("/api/auth/login", json={"email": email, "password": new["new_password"]}).status_code == 200
+        assert client.post(f"/api/admin/users/{uid}/password", headers=admin, json={"new_password": "Demo@12345"}).status_code == 200   # restore
+    admin_id = client.get("/api/auth/me", headers=admin).json()["id"]
+    assert client.post(f"/api/admin/users/{admin_id}/password", headers=admin, json=new).status_code == 404          # admins use their own profile
+    assert client.post("/api/admin/users/999999/password", headers=admin, json=new).status_code == 404

@@ -551,7 +551,7 @@ def admin_applications(status:str|None=None,u:m.User=Depends(allow("admin")),db:
     stmt=select(m.VendorApplication).join(m.Vendor)
     if status: stmt=stmt.where(m.VendorApplication.status==status)
     rows=db.scalars(stmt.order_by(m.VendorApplication.submitted_at.desc())).all()
-    return [{"id":a.id,"vendor_id":a.vendor_id,"business_name":a.vendor.business_name,"email":a.vendor.user.email,"phone":a.vendor.phone,"description":a.vendor.description,"minimum_order_amount":float(a.vendor.minimum_order_amount) if a.vendor.minimum_order_amount is not None else None,"delivery_terms_note":a.vendor.delivery_terms_note,"terms_confirmed":a.vendor.terms_confirmed,"business_address":a.business_address,"contact_person":a.contact_person,"agreement_reference":a.agreement_reference,"agreement_valid":a.vendor.agreement_valid,"vendor_status":a.vendor.status,"status":a.status,"decision_remarks":a.decision_remarks,"submitted_at":a.submitted_at,"documents":[{"id":d.id,"filename":d.filename,"url":f"/api/admin/documents/{d.id}"} for d in db.scalars(select(m.VendorDocument).where(m.VendorDocument.application_id==a.id))]} for a in rows]
+    return [{"id":a.id,"vendor_id":a.vendor_id,"user_id":a.vendor.user_id,"business_name":a.vendor.business_name,"email":a.vendor.user.email,"phone":a.vendor.phone,"description":a.vendor.description,"minimum_order_amount":float(a.vendor.minimum_order_amount) if a.vendor.minimum_order_amount is not None else None,"delivery_terms_note":a.vendor.delivery_terms_note,"terms_confirmed":a.vendor.terms_confirmed,"business_address":a.business_address,"contact_person":a.contact_person,"agreement_reference":a.agreement_reference,"agreement_valid":a.vendor.agreement_valid,"vendor_status":a.vendor.status,"status":a.status,"decision_remarks":a.decision_remarks,"submitted_at":a.submitted_at,"documents":[{"id":d.id,"filename":d.filename,"url":f"/api/admin/documents/{d.id}"} for d in db.scalars(select(m.VendorDocument).where(m.VendorDocument.application_id==a.id))]} for a in rows]
 
 @app.get("/api/admin/documents/{doc_id}")
 def admin_document(doc_id:int,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
@@ -604,6 +604,17 @@ def admin_create_student(data:s.StudentCreateIn,u:m.User=Depends(allow("admin"))
     student=m.User(name=data.name.strip(),email=email,phone=data.phone.strip(),password_hash=hash_password(data.password),role="student",enabled=True)
     db.add(student);db.commit();db.refresh(student)
     return {"id":student.id,"name":student.name,"email":student.email,"phone":student.phone,"enabled":student.enabled}
+
+@app.post("/api/admin/users/{user_id}/password")
+def admin_set_password(user_id:int,data:s.AdminSetPasswordIn,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
+    """An admin sets a new password for a student or vendor who has forgotten theirs (there is no e-mail reset)."""
+    target=db.get(m.User,user_id)
+    if not target or target.role not in ("student","vendor"): raise HTTPException(404,"Student or vendor account not found")
+    if not target.enabled: raise HTTPException(409,"This account cannot sign in, so its password cannot be changed")
+    target.password_hash=hash_password(data.new_password)
+    db.add(m.AuditLog(actor_id=u.id,event_type="admin_password_reset",entity_type="user",entity_id=target.id,details=f"Admin set a new password for {target.role} account {target.email}"))
+    db.commit()
+    return {"ok":True,"message":f"Password changed for {target.email}"}
 
 @app.delete("/api/admin/students/{student_id}")
 def admin_remove_student(student_id:int,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):

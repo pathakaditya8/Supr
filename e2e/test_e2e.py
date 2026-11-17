@@ -337,3 +337,39 @@ def test_e2e_18_admin_can_show_the_temporary_password_and_browser_does_not_autof
     form.get_by_role("button", name="Hide password").click()
     expect(field).to_have_attribute("type", "password")
     expect(form.get_by_label("BMU email")).to_have_value("")      # the admin's own login is not pre-filled
+
+
+def _login_status(email, password):
+    try:
+        call("POST", "/api/auth/login", {"email": email, "password": password}); return 200
+    except Exception as exc:
+        return getattr(exc, "code", 0)
+
+
+def test_e2e_19_admin_can_reset_a_students_and_a_vendors_password(new_page):
+    page = new_page()
+    sign_in(page, ADMIN)
+    # student
+    tab(page, "Students")
+    row = page.locator(".student-account-row").filter(has_text=STUDENT)
+    row.get_by_role("button", name="Reset password").click()
+    row.get_by_placeholder("At least 10 characters").fill("Admin-set-pass-1")
+    row.get_by_role("button", name="Save new password").click()
+    expect(page.get_by_text("Password changed for").first).to_be_visible()
+    assert _login_status(STUDENT, "Demo@12345") == 401
+    assert _login_status(STUDENT, "Admin-set-pass-1") == 200
+    # vendor
+    tab(page, "Applications")
+    card = page.locator(".application-card").filter(has_text="Kathi Junction")
+    card.get_by_role("button", name="Reset password").click()
+    card.get_by_placeholder("At least 10 characters").fill("Admin-set-pass-2")
+    card.get_by_role("button", name="Save new password").click()
+    expect(page.get_by_text("Password changed for Kathi Junction")).to_be_visible()
+    assert _login_status(KATHI, "Demo@12345") == 401
+    assert _login_status(KATHI, "Admin-set-pass-2") == 200
+    # restore the demo passwords through the same API so later tests still sign in
+    admin = token(ADMIN)
+    users = {u["email"]: u["id"] for u in call("GET", "/api/admin/students", token=admin)}
+    vendor_user = next(a["user_id"] for a in call("GET", "/api/admin/applications", token=admin) if a["email"] == KATHI)
+    for uid in (users[STUDENT], vendor_user):
+        call("POST", f"/api/admin/users/{uid}/password", {"new_password": "Demo@12345"}, token=admin)

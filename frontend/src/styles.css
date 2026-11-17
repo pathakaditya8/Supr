@@ -394,3 +394,15 @@ body{font-size:16px}
 .temp-password input{width:100%;box-sizing:border-box;padding-right:92px}
 .temp-password-toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:6px;min-height:36px;padding:0 10px;border:0;border-radius:8px;background:transparent;color:var(--green);font:inherit;font-size:14px;font-weight:600;cursor:pointer}
 .temp-password-toggle:hover{background:#e3f1f0}
+
+/* Admin: reset a student's or vendor's password */
+.student-row-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:flex-end}
+.admin-reset-form{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.admin-reset-form .temp-password{min-width:240px}
+.admin-reset-form .temp-password input{min-height:42px;border:1px solid #cfdcda;border-radius:10px;padding-left:12px;font:inherit;font-size:15px}
+@media(max-width:800px){.student-row-actions{grid-column:1/-1;justify-content:flex-start}.admin-reset-form{width:100%}.admin-reset-form .temp-password{flex:1 1 100%}}
+.student-account-row:has(.admin-reset-form) .student-row-actions{grid-column:1/-1;justify-content:flex-start;padding-top:4px}
+.admin-reset-form .temp-password{flex:1 1 280px;max-width:420px}
+.student-row-actions .admin-reset-form{flex:1 1 auto;flex-wrap:nowrap}
+.student-row-actions .admin-reset-form .temp-password{flex:1 1 280px;min-width:200px}
+@media(max-width:800px){.student-row-actions .admin-reset-form{flex-wrap:wrap}}

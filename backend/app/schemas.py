@@ -9,6 +9,8 @@ class RegisterIn(BaseModel):
     password: str = Field(min_length=10, max_length=128)
     role: str = "student"
 class LoginIn(BaseModel): email: str; password: str
+class AdminSetPasswordIn(BaseModel):
+    new_password: str = Field(min_length=10, max_length=128)
 class ChangePasswordIn(BaseModel):
     current_password: str = Field(min_length=1, max_length=128)
     new_password: str = Field(min_length=10, max_length=128)
