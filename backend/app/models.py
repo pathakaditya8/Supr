@@ -31,7 +31,7 @@ class Vendor(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
     business_name: Mapped[str] = mapped_column(String(160))
-    phone: Mapped[str] = mapped_column(String(32), default="")
+    phone: Mapped[str] = mapped_column(String(64), default="")
     description: Mapped[str] = mapped_column(Text, default="")
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     delivers_to_bmu: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -48,10 +48,12 @@ def main():
     target = create_engine(normalise(target_url), pool_pre_ping=True)
     if source.url == target.url: sys.exit("Source and target are the same database.")
 
+    if "users" in inspect(target).get_table_names():
+        with target.connect() as c:
+            if c.execute(select(func.count()).select_from(User)).scalar():
+                sys.exit("The target database already has users; refusing to copy over existing data.")
+    Base.metadata.drop_all(target)          # empty (or half-built by an earlier failed run): rebuild with the current schema
     Base.metadata.create_all(target)
-    with target.connect() as c:
-        if c.execute(select(func.count()).select_from(User)).scalar():
-            sys.exit("The target database already has users; refusing to copy over existing data.")
 
     available = set(inspect(source).get_table_names())
     copied = {}
