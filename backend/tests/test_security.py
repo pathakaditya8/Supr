@@ -246,3 +246,21 @@ def test_keep_alive_is_off_by_default_and_only_uses_https(monkeypatch):
     assert keepalive.target_url() is None
     monkeypatch.setenv("RENDER_EXTERNAL_URL", "https://supr-api.onrender.com/")
     assert keepalive.target_url() == "https://supr-api.onrender.com/api/health"
+
+
+def test_change_password_requires_current_password_and_works(client):
+    headers = login(client, "student@supr.bmu.edu.in")
+    wrong = client.post("/api/auth/change-password", headers=headers, json={"current_password": "wrong-password", "new_password": "Another-pass-123"})
+    assert wrong.status_code == 400
+    short = client.post("/api/auth/change-password", headers=headers, json={"current_password": "Demo@12345", "new_password": "short"})
+    assert short.status_code == 422
+    same = client.post("/api/auth/change-password", headers=headers, json={"current_password": "Demo@12345", "new_password": "Demo@12345"})
+    assert same.status_code == 400
+    assert client.post("/api/auth/change-password", json={"current_password": "x", "new_password": "Another-pass-123"}).status_code in (401, 403)
+    ok = client.post("/api/auth/change-password", headers=headers, json={"current_password": "Demo@12345", "new_password": "Another-pass-123"})
+    assert ok.status_code == 200
+    assert client.post("/api/auth/login", json={"email": "student@supr.bmu.edu.in", "password": "Demo@12345"}).status_code == 401
+    assert client.post("/api/auth/login", json={"email": "student@supr.bmu.edu.in", "password": "Another-pass-123"}).status_code == 200
+    # restore so later tests in the session still sign in with the demo password
+    back = client.post("/api/auth/change-password", headers=headers, json={"current_password": "Another-pass-123", "new_password": "Demo@12345"})
+    assert back.status_code == 200

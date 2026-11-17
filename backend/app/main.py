@@ -152,6 +152,14 @@ def login(data:s.LoginIn, db:Session=Depends(get_db)):
     if not u or not verify_password(data.password,u.password_hash): raise HTTPException(401,"Email or password is incorrect")
     return {"access_token":issue_token(u.id,u.role),"token_type":"bearer","user":{"id":u.id,"name":u.name,"email":u.email,"phone":u.phone,"role":u.role}}
 
+@app.post("/api/auth/change-password")
+def change_password(data:s.ChangePasswordIn,u:m.User=Depends(current_user),db:Session=Depends(get_db)):
+    """Lets a signed-in student, vendor or admin replace their own password (there is no e-mail reset)."""
+    if not verify_password(data.current_password,u.password_hash): raise HTTPException(400,"Current password is incorrect")
+    if data.new_password==data.current_password: raise HTTPException(400,"Choose a new password that is different from the current one")
+    u.password_hash=hash_password(data.new_password); db.commit()
+    return {"ok":True}
+
 @app.get("/api/auth/me")
 def me(u:m.User=Depends(current_user)):
     return {"id":u.id,"name":u.name,"email":u.email,"phone":u.phone,"role":u.role}

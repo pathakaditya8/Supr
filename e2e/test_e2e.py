@@ -265,3 +265,32 @@ def test_e2e_13_account_menu_when_signed_out(new_page):
     expect(menu.get_by_role("button", name="Sign out")).to_have_count(0)
     menu.get_by_role("button", name="Sign in").click()
     expect(page.get_by_label("BMU email")).to_be_visible()
+
+
+def _change_password_from_profile(page, current, new):
+    page.locator(".account-btn").click()
+    page.locator(".profile-dropdown").get_by_role("button", name="My profile").click()
+    form = page.locator(".password-card")
+    expect(form.get_by_role("heading", name="Reset password")).to_be_visible()
+    form.get_by_label("Current password").fill(current)
+    form.get_by_label("New password", exact=True).fill(new)
+    form.get_by_label("Confirm new password").fill(new)
+    form.get_by_role("button", name="Reset password").click()
+
+
+def test_e2e_14_student_and_vendor_can_reset_their_password(new_page):
+    for email, role_text in ((STUDENT, "BMU STUDENT ACCOUNT"), (KATHI, "VENDOR ACCOUNT")):
+        page = new_page()
+        sign_in(page, email)
+        _change_password_from_profile(page, "Demo@12345", "Changed-pass-123")
+        expect(page.get_by_text("Password changed")).to_be_visible()
+        expect(page.get_by_text(role_text)).to_be_visible()
+        _change_password_from_profile(page, "Changed-pass-123", "Demo@12345")   # restore for the other tests
+        expect(page.get_by_text("Password changed").first).to_be_visible()
+
+
+def test_e2e_15_reset_password_rejects_wrong_current_password(new_page):
+    page = new_page()
+    sign_in(page, STUDENT)
+    _change_password_from_profile(page, "not-my-password", "Changed-pass-123")
+    expect(page.get_by_role("alert").filter(has_text="Current password is incorrect")).to_be_visible()

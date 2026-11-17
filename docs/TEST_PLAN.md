@@ -145,6 +145,7 @@ Playwright drives the installed Microsoft Edge (headless) against an isolated st
 | 2026-11-17 | `python -m pytest tests -q` (API + security) | **39 passed**, 0 failed, 1 warning, about 10 s; same result after upgrading pytest to 9.2.0 |
 | 2026-11-17 | `python -m pytest tests -q` | **45 passed** after adding the test-first search tests and the query fix |
 | 2026-11-18 | `python -m pytest -q` (backend) and `python -m pytest e2e -q` (project root) | **62 API and security tests passed; 13 browser tests passed** (about 70 s) after the lint fixes. Bandit: 0 high, 0 medium, 2 low (same two false positives); Ruff: 0 findings |
+| 2026-11-18 | `python -m pytest -q`; `python -m pytest e2e -q` | **64 API and security tests passed; 15 browser tests passed** after adding password reset (wrong current password, too-short and unchanged password refused; old password stops working; student and vendor flows in the browser) |
 | 2026-11-17 | `python -m pytest tests -q` | **48 passed** after adding section-photo tests and the per-request lookup cache |
 | 2026-11-17 | `python -m pytest e2e -q` | Two runs while the machine was heavily loaded each had one timeout in a different test; both passed alone. The vendor-opening step now waits for the page to settle and retries, and the default wait is 15 s. Then **7 passed** on three consecutive runs |
 | 2026-11-17 | `python -m pytest e2e -v` (from project root) | **7 passed** on two consecutive runs, about 50 s each, Microsoft Edge headless; first run found the heart-button defect above |
