@@ -64,3 +64,7 @@ From the project root, `backend/.venv311/Scripts/python.exe perf/load_test.py` r
 ## Verification status
 
 See `docs/COMPLETION_REPORT.md`. A capability is marked complete only when implemented; test status is reported only after execution. No deployment, external legal verification, email provider, or payment integration is included.
+
+## Deploying
+
+See [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md) for the Render (backend and database) and Vercel (website) steps.

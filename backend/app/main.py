@@ -1,4 +1,5 @@
 import json
+import re
 import secrets
 from contextlib import asynccontextmanager
 from decimal import Decimal
@@ -251,8 +252,8 @@ async def upload_document(file:UploadFile=File(...),u:m.User=Depends(allow("vend
     if len(data)>5*1024*1024: raise HTTPException(413,"Documents must be 5 MB or smaller")
     signatures={".pdf":b"%PDF-",".png":b"\x89PNG\r\n\x1a\n",".jpg":b"\xff\xd8\xff",".jpeg":b"\xff\xd8\xff"}
     if not data.startswith(signatures[ext]): raise HTTPException(415,"File contents do not match the selected document type")
-    directory=Path(UPLOAD_DIR); directory.mkdir(parents=True,exist_ok=True); saved=f"{secrets.token_hex(16)}{ext}"; (directory/saved).write_bytes(data)
-    doc=m.VendorDocument(application_id=a.id,filename=Path(file.filename).name,stored_path=saved,content_type=file.content_type or "application/octet-stream"); db.add(doc); db.commit()
+    saved=f"{secrets.token_hex(16)}{ext}"; content_type=file.content_type or "application/octet-stream"; db.add(m.StoredFile(key=saved,content_type=content_type,content=data))
+    doc=m.VendorDocument(application_id=a.id,filename=Path(file.filename).name,stored_path=saved,content_type=content_type); db.add(doc); db.commit()
     return {"id":doc.id,"filename":doc.filename,"uploaded_at":doc.uploaded_at}
 
 @app.get("/api/vendor/products")
@@ -541,12 +542,17 @@ def admin_applications(status:str|None=None,u:m.User=Depends(allow("admin")),db:
 
 @app.get("/api/admin/documents/{doc_id}")
 def admin_document(doc_id:int,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
-    from fastapi.responses import FileResponse
+    from fastapi.responses import Response
     doc=db.get(m.VendorDocument,doc_id)
     if not doc: raise HTTPException(404,"Document not found")
-    file=Path(UPLOAD_DIR)/doc.stored_path
-    if not file.exists(): raise HTTPException(404,"Document file unavailable")
-    return FileResponse(file,media_type=doc.content_type,filename=doc.filename)
+    stored=db.get(m.StoredFile,doc.stored_path)
+    if not stored:
+        legacy=Path(UPLOAD_DIR)/doc.stored_path          # files saved to disk before uploads moved into the database
+        if not legacy.is_file(): raise HTTPException(404,"Document file unavailable")
+        content,content_type=legacy.read_bytes(),doc.content_type
+    else: content,content_type=stored.content,stored.content_type
+    safe_name=re.sub(r'[^A-Za-z0-9._ -]',"_",doc.filename)       # no quotes or line breaks in the header
+    return Response(content,media_type=content_type,headers={"Content-Disposition":f'attachment; filename="{safe_name}"'})
 
 @app.post("/api/admin/applications/{aid}/decision")
 def decide_application(aid:int,data:s.DecisionIn,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
@@ -631,19 +637,19 @@ async def upload_product_image(file:UploadFile=File(...),u:m.User=Depends(allow(
     data=await file.read(5*1024*1024+1)
     if len(data)>5*1024*1024: raise HTTPException(413,"Food images must be 5 MB or smaller")
     if not data.startswith(signatures[ext]) or (ext==".webp" and data[8:12]!=b"WEBP"): raise HTTPException(415,"Image contents do not match the selected image type")
-    name=f"{secrets.token_hex(16)}{ext}"; directory=Path(UPLOAD_DIR)/"products"; directory.mkdir(parents=True,exist_ok=True); (directory/name).write_bytes(data)
+    name=f"{secrets.token_hex(16)}{ext}"; types={".jpg":"image/jpeg",".jpeg":"image/jpeg",".png":"image/png",".webp":"image/webp"}
+    db.add(m.StoredFile(key=f"products/{name}",content_type=types[ext],content=data)); db.commit()
     return {"image_url":f"/api/public/product-images/{name}"}
 
 @app.get("/api/public/product-images/{filename}")
-def product_image(filename:str):
+def product_image(filename:str,db:Session=Depends(get_db)):
     import re
 
-    from fastapi.responses import FileResponse
+    from fastapi.responses import Response
     if not re.fullmatch(r"[a-f0-9]{32}\.(jpg|jpeg|png|webp)",filename): raise HTTPException(404,"Image not found")
-    file=Path(UPLOAD_DIR)/"products"/filename
-    if not file.exists(): raise HTTPException(404,"Image not found")
-    types={"jpg":"image/jpeg","jpeg":"image/jpeg","png":"image/png","webp":"image/webp"}
-    return FileResponse(file,media_type=types[file.suffix[1:]],headers={"Cache-Control":"public, max-age=86400"})
+    stored=db.get(m.StoredFile,f"products/{filename}")
+    if not stored: raise HTTPException(404,"Image not found")
+    return Response(stored.content,media_type=stored.content_type,headers={"Cache-Control":"public, max-age=86400"})
 
 @app.get("/api/admin/listings")
 def admin_listings(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):

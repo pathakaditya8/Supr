@@ -1,0 +1,30 @@
+# Render Blueprint: creates the backend web service and its PostgreSQL database.
+# Render dashboard -> New -> Blueprint -> pick this repository.
+services:
+  - type: web
+    name: supr-api
+    runtime: python
+    plan: free                      # free instances sleep after ~15 minutes idle; upgrade for always-on
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips="*"
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: DATABASE_URL
+        fromDatabase:
+          name: supr-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true         # signs login tokens; Render creates a long random value
+      - key: ACCESS_TOKEN_MINUTES
+        value: "60"
+      - key: ALLOWED_ORIGINS
+        sync: false                 # set to your Vercel address, e.g. https://supr-bmu.vercel.app
+
+databases:
+  - name: supr-db
+    plan: free                      # free Render databases expire after 30 days; upgrade or export before then
+    databaseName: supr
+    user: supr

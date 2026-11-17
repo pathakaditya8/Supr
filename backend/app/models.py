@@ -1,6 +1,6 @@
 from datetime import UTC, datetime
 
-from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
+from sqlalchemy import Boolean, CheckConstraint, DateTime, ForeignKey, Integer, LargeBinary, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .database import Base
@@ -57,6 +57,14 @@ class VendorApplication(Base):
     decision_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     decision_remarks: Mapped[str] = mapped_column(Text, default="")
     vendor: Mapped[Vendor] = relationship(back_populates="application")
+
+class StoredFile(Base):
+    """Uploaded documents and food photos, kept in the database so they survive hosts with temporary disks."""
+    __tablename__ = "stored_files"
+    key: Mapped[str] = mapped_column(String(200), primary_key=True)
+    content_type: Mapped[str] = mapped_column(String(100))
+    content: Mapped[bytes] = mapped_column(LargeBinary)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
 
 class VendorDocument(Base):
     __tablename__ = "vendor_documents"
