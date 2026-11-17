@@ -375,7 +375,7 @@ body{font-size:16px}
 .detail-name-tile .photo-credit a{color:#fff;text-decoration:underline}
 
 /* ===== Reset password card (student and vendor profile) ===== */
-.password-card{width:min(100%,1040px);margin:20px auto 0;padding:28px 30px;background:#fff;border:1px solid #dce7e6;border-radius:16px;box-shadow:0 12px 30px rgba(22,63,77,.055)}
+.password-card{box-sizing:border-box;width:min(100%,1040px);max-width:920px;margin:20px auto 0;padding:30px;background:#fff;border:1px solid #dce7e6;border-radius:16px;box-shadow:0 12px 30px rgba(22,63,77,.055)}
 .password-card-head{display:flex;align-items:center;gap:14px;margin-bottom:18px}
 .password-card-head h3{margin:0;font-size:20px;color:var(--ink)}
 .password-card-head p{margin:4px 0 0;color:#5f6c69;font-size:14px}
@@ -386,5 +386,5 @@ body{font-size:16px}
 .password-form input:focus{outline:2px solid var(--green);outline-offset:1px}
 .password-form .primary-btn{grid-column:1/-1;justify-self:start}
 .password-error{grid-column:1/-1;margin:0;color:#b42318;font-size:14px}
-@media(max-width:800px){.password-card{padding:22px 18px}.password-form{grid-template-columns:1fr}}
+@media(max-width:800px){.password-card{padding:20px}.password-form{grid-template-columns:1fr}}
 .delivery-check-all{grid-column:1/-1;background:#f3f8f7}
