@@ -4,7 +4,9 @@ Run from backend/: python -m app.import_tech_vendors
 Safe to re-run: shops that already exist are skipped. Also called by app.seed.
 """
 import secrets
+
 from sqlalchemy import select
+
 from .database import SessionLocal
 from .models import Category, Product, User, Vendor, VendorApplication
 from .security import hash_password

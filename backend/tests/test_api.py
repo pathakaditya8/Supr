@@ -1,6 +1,8 @@
 from sqlalchemy import select
+
 from app.database import SessionLocal
 from app.models import Product, ProductVariant, Vendor
+
 
 def test_login_and_invalid_login(client):
     assert client.post("/api/auth/login",json={"email":"student@supr.bmu.edu.in","password":"Demo@12345"}).status_code==200

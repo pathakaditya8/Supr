@@ -12,6 +12,7 @@ keep the name tile.
 Run from backend/: python -m app.vendor_images   (applies the paths to an existing database)
 """
 from sqlalchemy import select
+
 from .database import SessionLocal
 from .models import Vendor
 

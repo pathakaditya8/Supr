@@ -63,7 +63,7 @@ Test IDs refer to [`TEST_PLAN.md`](TEST_PLAN.md). Last runs on 2026-11-17: API a
 | FR-15 | menu provenance in `MENU_IMPORT_REPORT.md`, review notes on items (hidden from students) | Implemented; tested (T-MENU-01) |
 | FR-16 | `tech_vendors.py`, `import_tech_vendors.py`, vendor status `listed`, cart refusal, listed-shop UI | Implemented; tested (T-LIST-01 to T-LIST-05) |
 | NFR-01 | HMAC signed expiring bearer token, Argon2 password hash, Pydantic validation, role checks, upload type checks | Implemented; tested (T-SEC-01 to T-SEC-17); Bandit, pip-audit and npm audit run on 2026-11-17 |
-| NFR-02 | SQLAlchemy relational models, Alembic migrations 0001–0007, transactional checkout | Implemented; checkout tested (T-ORD-01); concurrency not tested |
+| NFR-02 | SQLAlchemy relational models, Alembic migrations 0001–0012, transactional checkout | Implemented; checkout tested (T-ORD-01); last-item race tested (no overselling) |
 | NFR-03 | responsive catalogue/dashboard views, empty/loading states, larger type | Implemented; main journeys covered by browser tests (T-E2E-01 to T-E2E-07); no mobile-width automated check |
 | NFR-04 | FastAPI modules, SQLite/PostgreSQL via `DATABASE_URL`, paginated catalogue | Partial; API is still largely one module (`main.py`) |
 | NFR-05 | approval history and audit logs, including bulk availability changes | Implemented; audit entries not yet asserted in tests |

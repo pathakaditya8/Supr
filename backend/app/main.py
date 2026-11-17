@@ -1,17 +1,21 @@
+import json
+import secrets
 from contextlib import asynccontextmanager
 from decimal import Decimal
-import json
 from pathlib import Path
-import secrets
+
 from fastapi import Depends, FastAPI, File, HTTPException, Query, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import and_, func, or_, select, update
 from sqlalchemy.orm import Session, selectinload
+
+from . import models as m
+from . import schemas as s
 from .config import ALLOWED_ORIGINS, UPLOAD_DIR
 from .database import Base, engine, get_db
-from . import models as m, schemas as s
 from .security import hash_password, issue_token, read_token, verify_password
+
 
 @asynccontextmanager
 async def lifespan(app):
@@ -571,7 +575,7 @@ def admin_history(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
 
 @app.get("/api/admin/students")
 def admin_students(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
-    rows=db.scalars(select(m.User).where(m.User.role=="student",m.User.enabled==True).order_by(m.User.name)).all()
+    rows=db.scalars(select(m.User).where(m.User.role=="student",m.User.enabled.is_(True)).order_by(m.User.name)).all()
     return [{"id":x.id,"name":x.name,"email":x.email,"phone":x.phone,"created_at":x.created_at} for x in rows]
 
 @app.post("/api/admin/students",status_code=201)
@@ -591,8 +595,8 @@ def admin_remove_student(student_id:int,u:m.User=Depends(allow("admin")),db:Sess
 
 @app.get("/api/admin/metrics")
 def admin_metrics(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
-    count=lambda query: db.scalar(query) or 0
-    return {"students":count(select(func.count()).select_from(m.User).where(m.User.role=="student",m.User.enabled==True)),"vendors":count(select(func.count()).select_from(m.Vendor)),"active_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="approved")),"pending_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="pending")),"approved_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="approved")),"rejected_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="rejected")),"stopped_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="stopped")),"orders":count(select(func.count()).select_from(m.Order)),"sales":float(count(select(func.sum(m.Order.subtotal)).where(m.Order.status!="cancelled")))}
+    def count(query): return db.scalar(query) or 0
+    return {"students":count(select(func.count()).select_from(m.User).where(m.User.role=="student",m.User.enabled.is_(True))),"vendors":count(select(func.count()).select_from(m.Vendor)),"active_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="approved")),"pending_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="pending")),"approved_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="approved")),"rejected_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="rejected")),"stopped_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="stopped")),"orders":count(select(func.count()).select_from(m.Order)),"sales":float(count(select(func.sum(m.Order.subtotal)).where(m.Order.status!="cancelled")))}
 
 @app.get("/api/vendor/metrics")
 def vendor_metrics(u:m.User=Depends(allow("vendor")),db:Session=Depends(get_db)):
@@ -633,6 +637,7 @@ async def upload_product_image(file:UploadFile=File(...),u:m.User=Depends(allow(
 @app.get("/api/public/product-images/{filename}")
 def product_image(filename:str):
     import re
+
     from fastapi.responses import FileResponse
     if not re.fullmatch(r"[a-f0-9]{32}\.(jpg|jpeg|png|webp)",filename): raise HTTPException(404,"Image not found")
     file=Path(UPLOAD_DIR)/"products"/filename

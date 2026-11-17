@@ -1,13 +1,14 @@
 """Reset to menu-source-backed BMU vendor demo records (destructive to local DB)."""
 from .database import Base, SessionLocal, engine
-from .models import User, Vendor, VendorApplication, Category, Product, ProductVariant, ProductAddon
-from .security import hash_password
-from .menu_data import LAZEEZ, LAZEEZ_ADDONS, KATHI
 from .dominos_menu import DOMINOS
+from .menu_data import KATHI, LAZEEZ, LAZEEZ_ADDONS
+from .models import Category, Product, ProductAddon, ProductVariant, User, Vendor, VendorApplication
+from .security import hash_password
 
 FOOD_CATEGORIES=["Meals and Main Course","Snacks and Quick Bites","Beverages","Desserts and Sweets","Bakery and Confectionery","Fast Food","Healthy Food","Combos and Special Offers"]
-from .tech_vendors import TECH_CATEGORIES
 from .import_tech_vendors import add_tech_vendors
+from .tech_vendors import TECH_CATEGORIES
+
 Base.metadata.drop_all(engine)
 Base.metadata.create_all(engine)
 db=SessionLocal()
@@ -56,6 +57,7 @@ add_catalog("Kathi Junction",KATHI)
 add_catalog("Domino's",DOMINOS)
 db.flush(); add_tech_vendors(db)
 from .vendor_images import apply_vendor_images
+
 db.flush(); apply_vendor_images(db)  # laptop and phone shops from public listings (status "listed")
 db.commit(); db.close()
 print(f"Seeded 4 pending source vendors; Lazeez={len(LAZEEZ)+1} products including 24 momo variants; Kathi Junction={len(KATHI)} menu rows; Domino's={len(DOMINOS)} website menu items. Unconfirmed availability/terms remain disabled.")

@@ -1,0 +1,15 @@
+# Lint configuration for the Supr backend (run: python -m ruff check app tests)
+line-length = 200
+target-version = "py311"
+extend-exclude = ["migrations", ".venv", ".venv311"]
+
+[lint]
+select = ["E", "F", "I", "B", "UP", "BLE"]
+# B008: FastAPI's Depends(...) in argument defaults is the framework's documented pattern.
+# E701/E702/E401/E501: the codebase deliberately uses compact one-line statements and long lines.
+ignore = ["B008", "E701", "E702", "E401", "E741", "E501"]
+
+[lint.per-file-ignores]
+# These files must set environment variables / the test database before importing the app.
+"app/seed.py" = ["E402"]
+"tests/conftest.py" = ["E402", "F403"]

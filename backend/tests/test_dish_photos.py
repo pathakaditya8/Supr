@@ -1,5 +1,6 @@
 """Dish photos: grouped by type and diet, credited, and never the wrong diet."""
 from sqlalchemy import select
+
 from app.database import SessionLocal
 from app.dish_photos import dish_key
 from app.models import DishPhoto, Product, Vendor

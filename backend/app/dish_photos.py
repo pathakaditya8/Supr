@@ -8,12 +8,17 @@ Run from backend/:
     python -m app.dish_photos --dry-run   # list the photos needed and their searches
     python -m app.dish_photos             # fetch missing photos (Unsplash demo apps: 50 requests/hour; resumable)
 """
-import argparse, os, re, sys
+import argparse
+import os
+import re
+import sys
 from pathlib import Path
+
 import httpx
 from sqlalchemy import select
+
 from .database import SessionLocal
-from .models import DishPhoto, Product, Category
+from .models import Category, DishPhoto, Product
 
 VEG, NONVEG, ANY = "vegetarian", "non_vegetarian", "any"
 

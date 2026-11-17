@@ -3,10 +3,11 @@
 Run from backend/: python -m app.import_dominos
 Refuses to run if the Domino's vendor already has products, so it is safe to re-run.
 """
-from sqlalchemy import select, func
+from sqlalchemy import func, select
+
 from .database import SessionLocal
-from .models import Vendor, Category, Product, ProductVariant
 from .dominos_menu import DOMINOS
+from .models import Category, Product, ProductVariant, Vendor
 
 db=SessionLocal()
 vendor=db.scalar(select(Vendor).where(Vendor.business_name=="Domino's"))

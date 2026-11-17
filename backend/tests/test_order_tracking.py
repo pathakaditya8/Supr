@@ -1,6 +1,9 @@
 """Order tracking: campus deliveries pass through 'out_for_delivery'; pickups go straight from ready to completed."""
-import json, time
+import json
+import time
+
 from sqlalchemy import select
+
 from app.database import SessionLocal
 from app.models import Product, Vendor
 

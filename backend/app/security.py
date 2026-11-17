@@ -1,5 +1,11 @@
-import base64, hashlib, hmac, json, secrets, time
+import base64
+import hashlib
+import hmac
+import json
+import time
+
 from pwdlib import PasswordHash
+
 from .config import ACCESS_TOKEN_MINUTES, SECRET_KEY
 
 password_hash = PasswordHash.recommended()
@@ -16,4 +22,4 @@ def read_token(token: str):
         if not hmac.compare_digest(sig, expected): return None
         data = json.loads(base64.urlsafe_b64decode(payload + "=" * (-len(payload) % 4)))
         return data if data["exp"] > time.time() else None
-    except Exception: return None
+    except (ValueError, KeyError, TypeError): return None  # malformed or tampered token

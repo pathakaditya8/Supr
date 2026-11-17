@@ -14,14 +14,18 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 | Admin approval/rejection/agreement recording | Completed | Decision controls with agreement validity and remarks; approval history |
 | Vendor listing management | Completed | Create, edit, pause, remove; variants and add-ons; item photo upload from the list and the edit form; mark all items in/out of stock. T-VEN-01, T-VEN-02 |
 | Stop/restart vendor participation | Completed | Admin controls in the applications view; recorded in approval history |
-| One-vendor cart, checkout, order status | Completed (API-tested) | Server-side prices and variant snapshots; vendor accept/prepare/ready/complete; student cancellation. T-ORD-01, T-ORD-02. No automated browser test |
+| One-vendor cart, checkout, order status | Completed | Server-side prices and variant snapshots; vendor accept/prepare/ready/complete; student cancellation. T-ORD-01, T-ORD-02; covered by browser tests |
 | Student favourites | Completed | Heart on menu cards and a Favourites tab (T-E2E-06). Stored per browser (`localStorage`), not per account |
 | Notifications | Completed | Persisted in-app notifications with unread count and read marking |
 | Admin student accounts | Completed | Admin can list, add and remove student accounts |
 | Analytics and reports | Partially Completed | Summary metrics for each role; no charts or exportable reports (`recharts` is installed but unused) |
 | Vendor terms confirmation | Partially Completed | API exists (`PUT /api/vendor/terms`) but there is no vendor screen to confirm minimum order and delivery terms |
 | Menus for the four vendors | Partially Completed | Kolkata's Lazeez (128 items) and Kathi Junction (72) from supplied menus; Domino's (121) from the website on 2026-11-17; **Greenox not imported**. All start at zero stock until each vendor stocks them. See [`MENU_IMPORT_REPORT.md`](MENU_IMPORT_REPORT.md) |
-| Database, demo seed and migrations | Completed | SQLite by default, PostgreSQL via `DATABASE_URL`; Alembic migrations 0001–0007; reset seed plus `app.import_dominos` for adding Domino's to an existing database |
+| Database, demo seed and migrations | Completed | SQLite by default, PostgreSQL via `DATABASE_URL`; Alembic migrations 0001–0012; reset seed plus import scripts for Domino's, laptop and phone shops, and photos |
+| Laptop and phone shops (Tech page) | Completed | Five public-information shops with status `listed` (visible, never orderable), separate Tech page, category filters. See [`TECH_SHOPS_REPORT.md`](TECH_SHOPS_REPORT.md) |
+| Order tracking and order history | Completed | Stage tracker including out-for-delivery for campus delivery; Your orders and Order history pages. T-ORD-01, T-ORD-02 |
+| English and Hindi | Completed | Header language switch; menu data stays as entered |
+| Dish and shop photos | Partially Completed | Credited Unsplash photos by dish type; shop images for four vendors; 16 of 35 dish photos still to fetch because of Unsplash's 50-per-hour limit |
 | Online payment, live tracking, native mobile, non-BMU expansion | Not Applicable | Explicitly out of scope (MoSCoW "Won't") |
 
 ## Course evidence (CSE3005 handout)
@@ -30,17 +34,17 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 |---|---|---|
 | SE concepts, SDLC models, Agile choice, ethics | Completed | [`SDLC_AND_ETHICS.md`](SDLC_AND_ETHICS.md) |
 | Requirements: functional, non-functional, MoSCoW, traceability | Completed | [`REQUIREMENTS.md`](REQUIREMENTS.md), [`OPEN_DECISIONS.md`](OPEN_DECISIONS.md) |
-| Requirement elicitation record | Not Started | No record of how requirements were gathered (interviews, questionnaire) |
+| Requirement elicitation record | Partially Completed | Plan, questionnaire, interview guides and findings template in [`REQUIREMENT_ELICITATION.md`](REQUIREMENT_ELICITATION.md). **Findings are blank until the team collects real answers** |
 | UML use case diagram | Completed | [`diagrams/USE_CASE.md`](diagrams/USE_CASE.md) |
 | UML sequence diagrams | Completed | [`diagrams/SEQUENCE.md`](diagrams/SEQUENCE.md): sign-in and role check, placing an order, vendor fulfilment, vendor application and admin approval/stop-restart; traced from the implemented routes |
 | DFD context, Level-0 and Level-1 | Completed | [`diagrams/DFD.md`](diagrams/DFD.md): context diagram, Level-0 with 7 processes and 8 data stores, Level-1 for placing orders and for marketplace governance; levels balanced |
 | ER diagram | Completed | [`diagrams/ER.md`](diagrams/ER.md): all 14 tables with keys, cardinalities and constraints, checked against the live database |
-| Coding standards | Partially Completed | Guidance in `SDLC_AND_ETHICS.md`; no linter configured or run |
-| Unit and integration testing, automation | Completed | 45 API, security and search pytest cases, **45 passed** on 2026-11-17 |
-| System, regression, performance, security testing | Completed | System: 7 Playwright browser tests; security: 29 attack-style tests plus Bandit, pip-audit and npm audit; performance: load test at 1–50 users and a last-item race (no overselling), with a query fix that more than doubled throughput. Two assumed response-time targets are still missed on one worker; see [`TEST_PLAN.md`](TEST_PLAN.md) |
-| Effort, cost and time estimation, CPM, PERT | Completed (estimates) | [`PROJECT_PLAN.md`](PROJECT_PLAN.md); PERT network is described in text, not drawn |
-| Monitoring and control (planned vs actual) | Not Started | No actual effort or sprint data recorded |
-| Agile sprint evidence | Not Started | Sprints planned only; no backlogs, reviews, retrospectives or burndown |
+| Coding standards | Completed (frontend cleanup open) | Ruff configured, 183 findings fixed, 0 remain; ESLint configured, 25 findings (15 errors, 10 warnings) recorded and not yet fixed. See [`QUALITY_MAINTENANCE.md`](QUALITY_MAINTENANCE.md) |
+| Unit and integration testing, automation | Completed | 62 API, security and search pytest cases, **62 passed** on 2026-11-18 |
+| System, regression, performance, security testing | Completed | System: 13 Playwright browser tests (13 passed on 2026-11-18); security: 29 attack-style tests plus Bandit, pip-audit and npm audit; performance: load test at 1–50 users and a last-item race (no overselling), with a query fix that more than doubled throughput. Two assumed response-time targets are still missed on one worker; see [`TEST_PLAN.md`](TEST_PLAN.md) |
+| Effort, cost and time estimation, CPM, PERT | Completed (estimates) | [`PROJECT_PLAN.md`](PROJECT_PLAN.md); PERT network drawn in [`diagrams/PERT.md`](diagrams/PERT.md), critical path 45.0 days, standard deviation 3.24 days |
+| Monitoring and control (planned vs actual) | Partially Completed | Template, issue and risk log (10 real items) and burndown table in [`PROJECT_TRACKING.md`](PROJECT_TRACKING.md). **Actual hours are blank until the team enters them** |
+| Agile sprint evidence | Partially Completed | Sprint-by-sprint delivered evidence recorded in `PROJECT_TRACKING.md`; **dates and retrospectives need the team**. Git history is only three commits |
 | Risk management | Completed | Risk register in `PROJECT_PLAN.md` |
 | QA/QC, maintenance types, reverse engineering | Completed | [`QUALITY_MAINTENANCE.md`](QUALITY_MAINTENANCE.md) |
 | AI-assisted engineering, human validation, static analysis, TDD | Completed | Validation log, scan results and a recorded red/green/refactor cycle (search wildcard defect) in [`AI_ENGINEERING.md`](AI_ENGINEERING.md) |
@@ -81,3 +85,4 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 - `backend/.venv` points to a Python install that no longer exists; use `backend/.venv311`.
 - Uvicorn's `--reload` did not always pick up backend edits on this Windows machine; restart the server after backend changes.
 - Performance: on one server process, browsing (736 ms) and ordering (1,476 ms) miss the assumed 95th-percentile targets at 25 users. More workers need PostgreSQL first, because SQLite fails under concurrent writes.
+- 2026-11-18: Ruff and ESLint configured and run (backend now clean); PERT diagram, sprint and monitoring record, and elicitation pack added; a stray `except Exception` in token checking narrowed; PRODUCT.md pushed to GitHub. 62 API and 13 browser tests pass.

@@ -1,5 +1,6 @@
 """Illustrative section photos (Unsplash) fall back correctly and never replace a vendor's own photo."""
-from sqlalchemy import select, event
+from sqlalchemy import event, select
+
 from app.database import SessionLocal, engine
 from app.models import MenuSectionPhoto, Product, Vendor
 
@@ -40,7 +41,7 @@ def test_vendor_photo_always_wins(client):
 def test_section_photos_do_not_add_per_item_queries(client):
     vendor_id, _, _ = setup_section()
     statements = []
-    listener = lambda conn, cursor, statement, *a: statements.append(statement)
+    def listener(conn, cursor, statement, *a): statements.append(statement)
     event.listen(engine, "before_cursor_execute", listener)
     try:
         page = client.get("/api/products", params={"vendor_id": vendor_id, "limit": 48}).json()

@@ -5,6 +5,7 @@ matched every menu item. See docs/AI_ENGINEERING.md for the red/green record.
 """
 import pytest
 from sqlalchemy import select
+
 from app.database import SessionLocal
 from app.models import Vendor
 

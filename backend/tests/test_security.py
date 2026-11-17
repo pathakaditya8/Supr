@@ -3,11 +3,15 @@
 Each test sets up the state it needs, so the file does not depend on test order.
 Test passwords below are fixture values for the throwaway test database only.
 """
-import base64, json, time
+import base64
+import json
+import time
+
 import pytest
 from sqlalchemy import select
+
 from app.database import SessionLocal
-from app.models import Product, ProductVariant, Vendor, Order, Notification, User
+from app.models import Notification, Product, User, Vendor
 from app.security import issue_token
 
 TEST_PASSWORD = "Test@123456"

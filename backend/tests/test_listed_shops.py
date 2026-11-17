@@ -1,5 +1,6 @@
 """Laptop and phone shops listed from public information: visible, contactable, never orderable."""
 from sqlalchemy import select
+
 from app.database import SessionLocal
 from app.models import User, Vendor
 from app.tech_vendors import TECH_VENDORS

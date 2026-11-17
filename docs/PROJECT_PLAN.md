@@ -66,7 +66,9 @@ Critical path: A → B → C → D → F → G → H → I = **46 working days**
 | Frontend integration | 6 | 8 | 15 | 8.83 |
 | Verification and documentation | 7 | 10 | 17 | 10.67 |
 
-PERT network (illustrative): Requirements/design → Identity/governance → Cart/orders → Frontend integration → Verification/docs; Catalogue/listings branches from design and joins before cart/orders. PERT values need replacement with observed sprint data.
+The PERT network is drawn in [`diagrams/PERT.md`](diagrams/PERT.md) with the critical-path duration (45.0 days), variance and standard deviation (3.24 days). Observed sprint data goes in [`PROJECT_TRACKING.md`](PROJECT_TRACKING.md).
+
+Text description: Requirements/design → Identity/governance → Cart/orders → Frontend integration → Verification/docs; Catalogue/listings branches from design and joins before cart/orders. PERT values need replacement with observed sprint data.
 
 ## Risk register
 

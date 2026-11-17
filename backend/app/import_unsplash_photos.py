@@ -19,10 +19,14 @@ Unsplash "demo" apps allow 50 requests per hour. Each photo uses two (a search
 and the required download notice), so the script stops when the limit runs low;
 run it again later and it continues with what is left.
 """
-import argparse, os, sys
+import argparse
+import os
+import sys
 from pathlib import Path
+
 import httpx
 from sqlalchemy import select
+
 from .database import SessionLocal
 from .models import MenuSectionPhoto, Product, Vendor
 
