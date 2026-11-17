@@ -321,3 +321,19 @@ def test_e2e_17_admin_can_reset_their_password(new_page):
     expect(page.get_by_text("UNIVERSITY ADMIN ACCOUNT")).to_be_visible()
     _change_password_from_profile(page, "Changed-pass-123", "Demo@12345")
     expect(page.get_by_text("Password changed").first).to_be_visible()
+
+
+def test_e2e_18_admin_can_show_the_temporary_password_and_browser_does_not_autofill(new_page):
+    page = new_page()
+    sign_in(page, ADMIN)
+    tab(page, "Students")
+    form = page.locator(".student-create-card")
+    field = form.get_by_placeholder("At least 10 characters")
+    field.fill("Temp-pass-12345")
+    expect(field).to_have_attribute("type", "password")
+    form.get_by_role("button", name="Show password").click()
+    expect(field).to_have_attribute("type", "text")
+    expect(field).to_have_value("Temp-pass-12345")
+    form.get_by_role("button", name="Hide password").click()
+    expect(field).to_have_attribute("type", "password")
+    expect(form.get_by_label("BMU email")).to_have_value("")      # the admin's own login is not pre-filled
