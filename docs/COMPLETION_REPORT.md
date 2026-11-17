@@ -16,7 +16,7 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 | Stop/restart vendor participation | Completed | Admin controls in the applications view; recorded in approval history |
 | One-vendor cart, checkout, order status | Completed | Server-side prices and variant snapshots; vendor accept/prepare/ready/complete; student cancellation. T-ORD-01, T-ORD-02; covered by browser tests |
 | Student favourites | Completed | Heart on menu cards and a Favourites tab (T-E2E-06). Stored per browser (`localStorage`), not per account |
-| Password reset (signed in) | Completed | Students and vendors can change their own password from My profile (current password required, 10+ characters); `POST /api/auth/change-password`. There is still no e-mail "forgot password"; an admin resets forgotten passwords. T-AUTH-02, T-E2E-14, T-E2E-15 |
+| Password reset (signed in) | Completed | Students, vendors and the University Admin can change their own password from My profile (current password required, 10+ characters); `POST /api/auth/change-password`. There is still no e-mail "forgot password"; an admin resets forgotten passwords. T-AUTH-02, T-E2E-14, T-E2E-15 |
 | Notifications | Completed | Persisted in-app notifications with unread count and read marking |
 | Admin student accounts | Completed | Admin can list, add and remove student accounts |
 | Analytics and reports | Partially Completed | Summary metrics for each role; no charts or exportable reports (`recharts` is installed but unused) |
@@ -87,4 +87,4 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 - Uvicorn's `--reload` did not always pick up backend edits on this Windows machine; restart the server after backend changes.
 - Performance: on one server process, browsing (736 ms) and ordering (1,476 ms) miss the assumed 95th-percentile targets at 25 users. More workers need PostgreSQL first, because SQLite fails under concurrent writes.
 - 2026-11-18: Ruff and ESLint configured and run (backend now clean); PERT diagram, sprint and monitoring record, and elicitation pack added; a stray `except Exception` in token checking narrowed; PRODUCT.md pushed to GitHub. 62 API and 13 browser tests pass.
-- 2026-11-18: Reset password card on the student profile and a new vendor profile page (API `POST /api/auth/change-password`); Render and Vercel deployment files, keep-awake ping, and `copy_data` loader. 64 API and 15 browser tests pass.
+- 2026-11-18: Reset password card on the student profile and a new vendor profile page (API `POST /api/auth/change-password`); Render and Vercel deployment files, keep-awake ping, and `copy_data` loader. 64 API and 17 browser tests pass; vendors can tick "All campus places" for delivery; admin profile page.

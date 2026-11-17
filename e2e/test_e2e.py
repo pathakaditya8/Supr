@@ -294,3 +294,30 @@ def test_e2e_15_reset_password_rejects_wrong_current_password(new_page):
     sign_in(page, STUDENT)
     _change_password_from_profile(page, "not-my-password", "Changed-pass-123")
     expect(page.get_by_role("alert").filter(has_text="Current password is incorrect")).to_be_visible()
+
+
+def test_e2e_16_vendor_can_select_all_campus_places(new_page):
+    page = new_page()
+    sign_in(page, DOMINOS)
+    box = page.locator(".vendor-delivery-card")
+    all_places = box.get_by_label("All campus places")
+    expect(all_places).to_be_visible()
+    all_places.click()                      # the box updates once the server has saved
+    expect(all_places).to_be_checked()
+    options = box.locator(".delivery-check-option:not(.delivery-check-all) input")
+    expect(options.first).to_be_checked()
+    for i in range(options.count()): expect(options.nth(i)).to_be_checked()
+    assert len(call("GET", "/api/vendor/delivery-points", token=token(DOMINOS))["delivery_points"]) == options.count()
+    all_places.click()
+    expect(all_places).not_to_be_checked()
+    for i in range(options.count()): expect(options.nth(i)).not_to_be_checked()
+
+
+def test_e2e_17_admin_can_reset_their_password(new_page):
+    page = new_page()
+    sign_in(page, ADMIN)
+    _change_password_from_profile(page, "Demo@12345", "Changed-pass-123")
+    expect(page.get_by_text("Password changed")).to_be_visible()
+    expect(page.get_by_text("UNIVERSITY ADMIN ACCOUNT")).to_be_visible()
+    _change_password_from_profile(page, "Changed-pass-123", "Demo@12345")
+    expect(page.get_by_text("Password changed").first).to_be_visible()

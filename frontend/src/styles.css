@@ -387,3 +387,4 @@ body{font-size:16px}
 .password-form .primary-btn{grid-column:1/-1;justify-self:start}
 .password-error{grid-column:1/-1;margin:0;color:#b42318;font-size:14px}
 @media(max-width:800px){.password-card{padding:22px 18px}.password-form{grid-template-columns:1fr}}
+.delivery-check-all{grid-column:1/-1;background:#f3f8f7}
