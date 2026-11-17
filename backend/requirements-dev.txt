@@ -1,0 +1,5 @@
+# Tools for testing and security checks (not needed to run the app).
+-r requirements.txt
+playwright>=1.48,<2   # browser end-to-end tests in ../e2e (uses installed Edge/Chrome)
+bandit>=1.7,<2        # static security analysis: python -m bandit -r app
+pip-audit>=2.7,<3     # known-vulnerability scan: python -m pip_audit -r requirements.txt

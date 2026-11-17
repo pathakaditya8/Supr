@@ -1,0 +1,183 @@
+{
+  "date": "2026-11-17",
+  "environment": {
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "cpu_count": 16,
+    "server": "uvicorn, 1 worker, SQLite (temporary file)",
+    "client": "same machine, httpx thread per user",
+    "duration_s_per_level": 15
+  },
+  "targets_p95_ms_at_25_users": {
+    "browse": 500,
+    "login": 1500,
+    "order": 1000
+  },
+  "load": [
+    {
+      "scenario": "browse",
+      "users": 1,
+      "requests": 530,
+      "throughput_rps": 35.3,
+      "p50_ms": 32.8,
+      "p95_ms": 54.6,
+      "p99_ms": 61.6,
+      "max_ms": 84.9,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "browse",
+      "users": 10,
+      "requests": 532,
+      "throughput_rps": 34.9,
+      "p50_ms": 333.3,
+      "p95_ms": 467.1,
+      "p99_ms": 489.7,
+      "max_ms": 525.7,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "browse",
+      "users": 25,
+      "requests": 729,
+      "throughput_rps": 47.3,
+      "p50_ms": 515.1,
+      "p95_ms": 735.6,
+      "p99_ms": 806.3,
+      "max_ms": 1013.3,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "browse",
+      "users": 50,
+      "requests": 711,
+      "throughput_rps": 44.8,
+      "p50_ms": 961.4,
+      "p95_ms": 1286.5,
+      "p99_ms": 1525.7,
+      "max_ms": 2461.8,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 1,
+      "requests": 265,
+      "throughput_rps": 17.6,
+      "p50_ms": 55.0,
+      "p95_ms": 59.3,
+      "p99_ms": 68.0,
+      "max_ms": 102.6,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 10,
+      "requests": 400,
+      "throughput_rps": 26.3,
+      "p50_ms": 366.8,
+      "p95_ms": 402.4,
+      "p99_ms": 419.4,
+      "max_ms": 436.3,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 25,
+      "requests": 386,
+      "throughput_rps": 24.6,
+      "p50_ms": 918.5,
+      "p95_ms": 1086.2,
+      "p99_ms": 1320.4,
+      "max_ms": 1435.5,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 50,
+      "requests": 382,
+      "throughput_rps": 23.1,
+      "p50_ms": 1771.6,
+      "p95_ms": 2766.2,
+      "p99_ms": 3668.6,
+      "max_ms": 4548.6,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 1,
+      "requests": 536,
+      "throughput_rps": 35.7,
+      "p50_ms": 27.1,
+      "p95_ms": 30.0,
+      "p99_ms": 33.2,
+      "max_ms": 78.3,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 10,
+      "requests": 507,
+      "throughput_rps": 33.3,
+      "p50_ms": 233.9,
+      "p95_ms": 651.3,
+      "p99_ms": 901.8,
+      "max_ms": 2263.0,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 25,
+      "requests": 496,
+      "throughput_rps": 31.9,
+      "p50_ms": 543.6,
+      "p95_ms": 1476.4,
+      "p99_ms": 2316.2,
+      "max_ms": 3642.5,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 50,
+      "requests": 424,
+      "throughput_rps": 26.5,
+      "p50_ms": 1260.8,
+      "p95_ms": 2209.6,
+      "p99_ms": 3026.3,
+      "max_ms": 4079.2,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    }
+  ],
+  "oversell": {
+    "buyers": 30,
+    "stock_before": 5,
+    "orders_created": 5,
+    "refused_409": 25,
+    "other_status": [],
+    "stock_after": 0,
+    "oversold": false
+  }
+}

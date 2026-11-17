@@ -1,0 +1,185 @@
+{
+  "date": "2026-11-17",
+  "environment": {
+    "os": "Windows-10-10.0.26300-SP0",
+    "python": "3.11.9",
+    "cpu_count": 16,
+    "server": "uvicorn, 1 worker, SQLite (temporary file)",
+    "client": "same machine, httpx thread per user",
+    "duration_s_per_level": 15
+  },
+  "targets_p95_ms_at_25_users": {
+    "browse": 500,
+    "login": 1500,
+    "order": 1000
+  },
+  "load": [
+    {
+      "scenario": "browse",
+      "users": 1,
+      "requests": 319,
+      "throughput_rps": 21.2,
+      "p50_ms": 54.4,
+      "p95_ms": 98.1,
+      "p99_ms": 102.9,
+      "max_ms": 139.0,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "browse",
+      "users": 10,
+      "requests": 362,
+      "throughput_rps": 23.7,
+      "p50_ms": 481.1,
+      "p95_ms": 708.2,
+      "p99_ms": 741.9,
+      "max_ms": 771.6,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "browse",
+      "users": 25,
+      "requests": 319,
+      "throughput_rps": 20.2,
+      "p50_ms": 1049.6,
+      "p95_ms": 1606.5,
+      "p99_ms": 1798.5,
+      "max_ms": 2236.1,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "browse",
+      "users": 50,
+      "requests": 245,
+      "throughput_rps": 14.5,
+      "p50_ms": 1980.4,
+      "p95_ms": 2987.5,
+      "p99_ms": 3543.9,
+      "max_ms": 3913.3,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 1,
+      "requests": 200,
+      "throughput_rps": 13.3,
+      "p50_ms": 73.0,
+      "p95_ms": 74.8,
+      "p99_ms": 80.2,
+      "max_ms": 131.3,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 10,
+      "requests": 393,
+      "throughput_rps": 25.8,
+      "p50_ms": 355.6,
+      "p95_ms": 394.9,
+      "p99_ms": 412.9,
+      "max_ms": 426.5,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 25,
+      "requests": 352,
+      "throughput_rps": 22.6,
+      "p50_ms": 879.2,
+      "p95_ms": 1025.4,
+      "p99_ms": 1208.5,
+      "max_ms": 1342.0,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "login",
+      "users": 50,
+      "requests": 309,
+      "throughput_rps": 0.1,
+      "p50_ms": 1793.9,
+      "p95_ms": 2771621.2,
+      "p99_ms": 2771630.4,
+      "max_ms": 2771635.2,
+      "errors": 18,
+      "error_rate_pct": 5.83,
+      "error_samples": [
+        "ReadTimeout"
+      ]
+    },
+    {
+      "scenario": "order",
+      "users": 1,
+      "requests": 335,
+      "throughput_rps": 22.3,
+      "p50_ms": 32.1,
+      "p95_ms": 91.2,
+      "p99_ms": 115.6,
+      "max_ms": 259.8,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 10,
+      "requests": 369,
+      "throughput_rps": 24.0,
+      "p50_ms": 262.0,
+      "p95_ms": 1066.7,
+      "p99_ms": 2132.3,
+      "max_ms": 3381.6,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 25,
+      "requests": 339,
+      "throughput_rps": 21.6,
+      "p50_ms": 737.6,
+      "p95_ms": 2003.2,
+      "p99_ms": 2551.6,
+      "max_ms": 3111.9,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    },
+    {
+      "scenario": "order",
+      "users": 50,
+      "requests": 255,
+      "throughput_rps": 15.5,
+      "p50_ms": 1725.2,
+      "p95_ms": 3027.4,
+      "p99_ms": 3873.5,
+      "max_ms": 4411.9,
+      "errors": 0,
+      "error_rate_pct": 0.0,
+      "error_samples": []
+    }
+  ],
+  "oversell": {
+    "buyers": 30,
+    "stock_before": 5,
+    "orders_created": 5,
+    "refused_409": 25,
+    "other_status": [],
+    "stock_after": 0,
+    "oversold": false
+  }
+}

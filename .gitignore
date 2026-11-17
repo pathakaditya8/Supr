@@ -1,0 +1,33 @@
+# Python
+.venv/
+.venv*/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Node / build output
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Local data, logs and secrets
+*.db
+*.db-journal
+supr.db.backup-*
+*.log
+backend/.env
+backend/uploads/
+tmp/
+
+# Editor / tool folders and local backups
+.agent/
+.agents/
+.claude/
+.codex/
+.gemini/
+.impeccable/
+*.backup-*
+
+# University course material (not part of the code)
+SE_CSE3005*
+course_handout.txt
