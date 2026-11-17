@@ -40,7 +40,7 @@ RULES = [
     ("juice",         r"juice|natural|alphonso|mango",                   {ANY: "mango juice glass"}),
     ("naan",          r"naan|kulcha",                                    {ANY: "naan bread"}),
     ("roti",          r"roti|paratha|pratha",                            {ANY: "indian flatbread roti"}),
-    ("chaap",         r"chaap",                                          {ANY: "soya chaap tandoori"}),
+    ("chaap",         r"chaap",                                          {ANY: "soya chaap skewers"}),
     ("tikka",         r"tikka|kabab|kebab|seekh|tandoori",               {VEG: "paneer tikka", NONVEG: "chicken tikka"}),
     ("paneer-curry",  r"paneer",                                         {ANY: "paneer curry"}),
     ("dal",           r"\bdal\b|dal ",                                   {ANY: "dal makhani"}),
@@ -53,6 +53,33 @@ RULES = [
     ("laptop-repair", r"laptop|motherboard|macbook|data recovery|desktop|computer|os install|printer|ups|diagnosis|screen|keyboard|battery|hinge|boot|virus", {ANY: "laptop repair technician"}),
     ("laptop",        r"refurbished|laptop|accessor",                    {ANY: "laptop on desk"}),
     ("phone-repair",  r"phone|mobile|iphone|display",                    {ANY: "smartphone screen repair"}),
+]
+# Laptop and phone services: one photo per kind of service, checked before the general rules above.
+# (type, regex over "name | section", Unsplash search) - first match wins.
+TECH_RULES = [
+    ("water-damage",   r"water-damaged|water damage",                       "water damaged laptop"),
+    ("motherboard",    r"motherboard|chip-level",                           "laptop motherboard circuit board repair"),
+    ("macbook",        r"macbook",                                          "macbook repair"),
+    ("data-recovery",  r"data recovery",                                    "hard drive data recovery"),
+    ("keyboard",       r"keyboard|trackpad",                                "laptop keyboard close up"),
+    ("battery-charger", r"battery|charging|dc jack",                        "laptop charger and battery"),
+    ("laptop-screen",  r"laptop screen",                                    "laptop screen replacement"),
+    ("hinge-body",     r"hinge|body replacement",                           "broken laptop hinge"),
+    ("software",       r"virus|slow laptop|os install|operating system|speed|boost", "laptop software installation"),
+    ("printer",        r"printer",                                          "printer repair"),
+    ("ups",            r"\bups\b",                                        "uninterruptible power supply ups"),
+    ("desktop-pc",     r"desktop|pc repair|pc and laptop|laptop and pc",    "desktop computer repair"),
+    ("iphone",         r"iphone",                                           "iphone repair"),
+    ("phone-display",  r"mobile display|phone display",                     "phone screen replacement"),
+    ("phone-cases",    r"covers|cases",                                     "phone cases covers"),
+    ("headphones",     r"neckband|headphone|earphone",                      "neckband headphones"),
+    ("computer-accessories", r"accessor|mice|cables",                       "computer mouse and cables"),
+    ("refurbished",    r"refurbished",                                      "refurbished laptop"),
+    ("laptop-sale",    r"sale and purchase|sale",                           "laptops for sale shop"),
+    ("laptop-hire",    r"hire|rental",                                      "laptop rental"),
+    ("diagnosis",      r"diagnosis",                                        "technician diagnosing a laptop"),
+    ("home-visit",     r"doorstep|visit",                                   "technician visiting home to repair laptop"),
+    ("phone-repair",   r"mobile phone repair|mobile service|phone repair|mobile repair", "smartphone repair technician"),
 ]
 PIZZA_SECTIONS = re.compile(r"pizza|cheese burst|cheese lava|cheese volcano|chicken feast|big big|2in1|no onion|^deals$")
 TECH_CATEGORIES = {"Laptop Repair", "Laptops and Accessories", "Phone Repair", "Phones and Accessories"}
@@ -68,6 +95,10 @@ def dish_key(name, section, category, dietary):
     if PIZZA_SECTIONS.search(section.lower()):                      # Domino's pizza sections: always a pizza
         d = d0 if d0 != ANY else VEG
         return f"pizza|{d}", "vegetable pizza" if d == VEG else "pepperoni chicken pizza"
+    if category in TECH_CATEGORIES:
+        service = f"{name} | {section}".lower()
+        for kind, pattern, search in TECH_RULES:
+            if re.search(pattern, service): return f"{kind}|any", search
     text = f"{name} | {section} | {category}".lower()
     if category == "Phone Repair" or category == "Phones and Accessories":
         text = "phone " + text
@@ -106,11 +137,14 @@ def main():
     ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
     ap.add_argument("--dry-run", action="store_true"); ap.add_argument("--redo", action="append", default=[], metavar="KEY", help='replace one photo, e.g. "pizza|vegetarian"')
     args = ap.parse_args()
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")  # photographer names can contain accents
     db = SessionLocal(); found, count = needed(db)
     have = {x.key: x for x in db.scalars(select(DishPhoto))}
     for k in args.redo:
         if k in have and not args.dry_run: db.delete(have.pop(k)); db.commit()
-    todo = sorted((k for k in found if k not in have), key=lambda k: -count[k])      # biggest groups first
+    tech_kinds = {kind for kind, _, _ in TECH_RULES} | {"laptop-repair", "laptop", "phone-repair"}
+    # laptop and phone services first (they would otherwise share one photo), then the biggest food groups
+    todo = sorted((k for k in found if k not in have), key=lambda k: (k.split("|")[0] not in tech_kinds, -count[k]))
     print(f"{len(found)} dish photos cover {sum(count.values())} items; {len(have)} already saved, {len(todo)} to fetch.")
     if args.dry_run:
         for k in todo: print(f"  {k:<30} {count[k]:>3} items  search '{found[k]}'")

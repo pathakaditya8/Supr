@@ -406,3 +406,10 @@ body{font-size:16px}
 .student-row-actions .admin-reset-form{flex:1 1 auto;flex-wrap:nowrap}
 .student-row-actions .admin-reset-form .temp-password{flex:1 1 280px;min-width:200px}
 @media(max-width:800px){.student-row-actions .admin-reset-form{flex-wrap:wrap}}
+/* Admin reset-password row: field and both buttons share one height and corner radius */
+.admin-reset-form{align-items:stretch}
+.admin-reset-form .temp-password input,.admin-reset-form .primary-btn,.admin-reset-form .mini-btn{box-sizing:border-box;height:46px;min-height:46px;border-radius:10px;font-size:15px;line-height:1}
+.admin-reset-form .primary-btn,.admin-reset-form .mini-btn{display:inline-flex;align-items:center;justify-content:center;padding:0 18px;white-space:nowrap}
+.admin-reset-form .temp-password{display:flex;align-items:center}
+.admin-reset-btn{min-height:40px}
+.student-account-row:has(.admin-reset-form) .remove-student-btn{height:46px;min-height:46px;border-radius:10px;padding:0 16px}

@@ -26,7 +26,7 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 | Laptop and phone shops (Tech page) | Completed | Five public-information shops with status `listed` (visible, never orderable), separate Tech page, category filters. See [`TECH_SHOPS_REPORT.md`](TECH_SHOPS_REPORT.md) |
 | Order tracking and order history | Completed | Stage tracker including out-for-delivery for campus delivery; Your orders and Order history pages. T-ORD-01, T-ORD-02 |
 | English and Hindi | Completed | Header language switch; menu data stays as entered |
-| Dish and shop photos | Partially Completed | Credited Unsplash photos by dish type; shop images for four vendors; 16 of 35 dish photos still to fetch because of Unsplash's 50-per-hour limit |
+| Dish and shop photos | Partially Completed | Credited Unsplash photos by dish type (laptop and phone services now each have their own photo: 24 different photos instead of 3); shop images for four vendors; 11 of 56 dish photos still to fetch because of Unsplash's 50-per-hour limit. `python -m app.sync_photos` copies fetched photos to the hosted database |
 | Online payment, live tracking, native mobile, non-BMU expansion | Not Applicable | Explicitly out of scope (MoSCoW "Won't") |
 
 ## Course evidence (CSE3005 handout)
@@ -89,3 +89,4 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 - 2026-11-18: Ruff and ESLint configured and run (backend now clean); PERT diagram, sprint and monitoring record, and elicitation pack added; a stray `except Exception` in token checking narrowed; PRODUCT.md pushed to GitHub. 62 API and 13 browser tests pass.
 - 2026-11-18: Reset password card on the student profile and a new vendor profile page (API `POST /api/auth/change-password`); Render and Vercel deployment files, keep-awake ping, and `copy_data` loader. 64 API and 17 browser tests pass; vendors can tick "All campus places" for delivery; admin profile page.
 - 2026-11-18: Admin can set a new password for a student or vendor who forgot theirs; show/hide on temporary passwords; vendors can tick "All campus places". 65 API and 19 browser tests pass.
+- 2026-11-18: Laptop and phone services get their own photos (22 new rules, 22 photos fetched); `app.sync_photos` copies photos to the hosted database; admin reset-password row fixed to equal button heights.

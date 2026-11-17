@@ -12,7 +12,18 @@ def test_dish_keys_group_by_type_and_keep_diet():
     assert dish_key("Chicken Fiesta", "Non-Veg Pizza", "Fast Food", "non_vegetarian")[0] == "pizza|non_vegetarian"
     assert dish_key("Peppy Paneer", "Veg Pizza", "Fast Food", "vegetarian")[0] == "pizza|vegetarian"
     assert dish_key("Chicken Fried Rice", "Rice", "Meals and Main Course", "non_vegetarian")[0] == "fried-rice|non_vegetarian"
-    assert dish_key("Laptop screen replacement", "Laptop repairs", "Laptop Repair", "unspecified")[0] == "laptop-repair|any"
+    # laptop and phone services each get their own kind of photo, not one shared repair photo
+    def tech(name, section, cat): return dish_key(name, section, cat, "unspecified")[0]
+    assert tech("Laptop screen replacement", "Laptop repairs", "Laptop Repair") == "laptop-screen|any"
+    assert tech("Keyboard and trackpad repair", "Laptop repairs", "Laptop Repair") == "keyboard|any"
+    assert tech("Motherboard repair", "Repairs", "Laptop Repair") == "motherboard|any"
+    assert tech("Data recovery", "Laptop repairs", "Laptop Repair") == "data-recovery|any"
+    assert tech("Free in-store diagnosis", "Visits", "Laptop Repair") == "diagnosis|any"
+    assert tech("UPS repair and rental", "Repairs", "Laptop Repair") == "ups|any"
+    assert tech("Computer accessories (mice, cables)", "Laptops", "Laptops and Accessories") == "computer-accessories|any"
+    assert tech("iPhone repair", "Phone repairs", "Phone Repair") == "iphone|any"
+    assert tech("Neckband headphones", "Phones", "Phones and Accessories") == "headphones|any"
+    assert tech("Laptop repair", "Laptop repairs", "Laptop Repair") == "laptop-repair|any"
     # a vegetarian item can never be given a non-vegetarian photo key
     assert dish_key("Veg Biryani", "Biryani", "Meals and Main Course", "vegetarian")[0] == "biryani|vegetarian"
 
