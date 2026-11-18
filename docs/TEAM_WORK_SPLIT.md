@@ -37,7 +37,7 @@ Every module owner also writes the tests and updates the documents for their own
 |---|---|---|---|
 | M1 | `/api/auth/*`, `/api/student/profile`, `/api/admin/users/{id}/password` | `AuthModal`, `StudentProfile`, `AccountProfile`, `PasswordCard`, `AdminResetPassword` | `test_security.py` (registration, passwords), E2E 1, 7, 12 to 15, 17, 19, 23 |
 | M2 | `/api/vendor/applications*`, `/api/admin/applications`, `/decision`, `/participation`, `/api/admin/history` | `VendorApplication`, `AdminApplications`, `AdminHistory`, `VendorHistoryToggle` | `test_security.py` (history, new vendor), E2E 4, 21, 24 |
-| M3 | `/api/products`, `/api/vendors`, `/api/categories`, `dish_photos.py` queries | Landing page, `TechPage`, `VendorMenu`, `ProductCard`, `ProductDetail`, `SavedItems` | `test_search.py`, `test_listed_shops.py`, E2E 6, 8, 11, 28 |
+| M3 | `/api/products`, `/api/vendors`, `/api/categories`, `dish_photos.py` queries | Landing page, `TechPage`, `VendorMenu`, `ProductCard`, `ProductDetail`, `SavedItems` | `test_search.py`, `test_listed_shops.py`, E2E 6, 8, 11, 28, 31 |
 | M4 | `/api/vendor/products*`, `/api/vendor/delivery-points`, bulk availability, product images | `VendorDeliveryManager`, `BulkAvailabilityBar`, `VendorPhotoButton`, vendor listing screens | `test_api.py`, E2E 5, 16 |
 | M5 | `/api/cart*`, `/api/orders*`, arrival and status updates | The bag, `OrderTracker`, `StudentActiveOrders`, `StudentOrderHistory` | `test_order_tracking.py`, `test_api.py`, E2E 2, 3, 20, 22, 27 |
 | M6 | `/api/admin/metrics`, `/api/admin/students`, `/api/admin/listings` | `AdminStudents`, `AdminProductForm`, admin listing tabs | `test_security.py` (listings split), E2E 25 |

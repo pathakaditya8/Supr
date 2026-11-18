@@ -239,10 +239,10 @@ def test_e2e_11_tech_page_is_separate_from_food(new_page):
     nav.get_by_role("button", name="Tech", exact=True).click()
     expect(page.get_by_role("heading", name="Laptop and phone help near BMU.", level=1)).to_be_visible()
     expect(page.locator(".product-card").first).to_be_visible()
-    expect(page.locator(".product-card .dietary-tag")).to_have_count(0)                        # no veg / non-veg labels
+    expect(page.locator(".product-card .diet-mark")).to_have_count(0)                          # no veg / non-veg marks on laptop and phone services
     expect(page.locator(".product-card .add-btn").first).to_contain_text("Details")             # listed shops: contact, not order
     page.locator(".category-chips").get_by_role("button", name="Phone Repair").click()
-    expect(page.locator(".product-card .service-tag").first).to_have_text("Phone Repair")
+    expect(page.locator(".product-card .product-eyebrow span").first).to_contain_text(re.compile("phone", re.I))      # the card says which kind of service it is
     expect(page.locator(".listed-tile")).to_have_count(5)
 
 
@@ -649,3 +649,24 @@ def test_e2e_30_dark_mode_follows_the_system_setting_until_the_user_chooses(brow
     page.goto(WEB, wait_until="domcontentloaded")
     assert page.evaluate("document.documentElement.dataset.theme") == "light"
     context.close()
+
+
+def test_e2e_31_product_card_is_uncluttered_and_clear(new_page):
+    page = new_page()
+    open_vendor(page, "Kathi Junction")
+    card = page.get_by_role("article").filter(has=page.get_by_role("heading", name="Aloo Roll", exact=True))
+    expect(card).to_be_visible()
+    expect(card.locator(".product-eyebrow")).to_be_visible()                          # section, small
+    expect(card.locator(".diet-mark.veg")).to_have_attribute("aria-label", "Vegetarian")   # a mark, not a text chip
+    expect(card.locator(".product-meta")).to_contain_text("Kathi Junction")
+    expect(card.locator(".vendor-avatar")).to_have_count(0)
+    expect(card.locator(".product-state")).to_have_count(0)                           # nothing laid over the photo for an in-stock item
+    expect(card.locator(".product-price")).to_contain_text("₹")
+    assert card.get_by_role("button", name="Add", exact=True).is_enabled()
+    # an item that is out of stock says so on its photo and cannot be added
+    open_vendor_page = page.get_by_role("button", name="← Back to marketplace")
+    open_vendor_page.click()
+    open_vendor(page, "Kolkata's Lazeez")
+    unavailable = page.locator(".product-card.is-unavailable").first
+    expect(unavailable.locator(".product-state")).to_have_text("Out of stock")
+    expect(unavailable.get_by_role("button", name=re.compile("Add|Options"))).to_be_disabled()

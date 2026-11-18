@@ -1806,3 +1806,71 @@ html[data-theme="dark"] .order-detail-lines small {
 html[data-theme="dark"] .order-detail-note {
     color: #a4adab
 }
+html[data-theme="dark"] article.product-card {
+    background: #1d2326;
+    border: 1px solid #354044;
+    box-shadow: 0 1px 2px rgba(18,59,72,0.05)
+}
+html[data-theme="dark"] article.product-card:hover {
+    box-shadow: 0 16px 36px rgba(18,59,72,0.12);
+    border-color: #455458
+}
+html[data-theme="dark"] article.product-card .product-photo {
+    background: linear-gradient(145deg,#252e31 0%,#2b363a 100%)
+}
+html[data-theme="dark"] article.product-card .product-photo:has(.dish-photo):after {
+    background: linear-gradient(transparent,rgba(10,22,18,0.4))
+}
+html[data-theme="dark"] article.product-card .wish-btn {
+    background: rgba(29,35,38,0.94);
+    color: #a0adb2;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.16)
+}
+html[data-theme="dark"] article.product-card .wish-btn:hover {
+    color: #d4837d
+}
+html[data-theme="dark"] article.product-card .wish-btn.saved {
+    color: #d77f79
+}
+html[data-theme="dark"] article.product-card .product-state {
+    background: rgba(20,32,36,0.84);
+    color: #ffffff
+}
+html[data-theme="dark"] article.product-card .photo-credit {
+    background: rgba(10,22,18,0.5);
+    color: rgba(255,255,255,0.94)
+}
+html[data-theme="dark"] article.product-card .product-eyebrow {
+    color: #a4adab
+}
+html[data-theme="dark"] article.product-card .product-meta {
+    color: #a4adab
+}
+html[data-theme="dark"] article.product-card .product-meta .vendor-name-link {
+    color: #b3c0c5
+}
+html[data-theme="dark"] article.product-card .product-meta .vendor-check {
+    color: #ffffff
+}
+html[data-theme="dark"] article.product-card .product-meta .delivery-yes {
+    color: #93cdb4
+}
+html[data-theme="dark"] article.product-card .product-meta .delivery-no {
+    color: #a4adab
+}
+html[data-theme="dark"] article.product-card .product-desc {
+    color: #a4adab
+}
+html[data-theme="dark"] article.product-card .product-portion {
+    color: #a3acad
+}
+html[data-theme="dark"] article.product-card .product-price {
+    color: var(--text-brand)
+}
+html[data-theme="dark"] article.product-card .add-btn {
+    background: #293337;
+    color: #a0d6e3
+}
+html[data-theme="dark"] article.product-card .add-btn:hover:not(:disabled) {
+    color: #ffffff
+}
