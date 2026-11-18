@@ -3,3 +3,4 @@
 playwright>=1.48,<2   # browser end-to-end tests in ../e2e (uses installed Edge/Chrome)
 bandit>=1.7,<2        # static security analysis: python -m bandit -r app
 pip-audit>=2.7,<3     # known-vulnerability scan: python -m pip_audit -r requirements.txt
+pytest-cov>=7,<8       # coverage: python -m pytest --cov=app (used for docs/Supr_Unit_Testing_Document.docx)

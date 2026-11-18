@@ -1,4 +1,4 @@
-"""Copy dish and section photo rows from the local database into the hosted one (safe to repeat).
+r"""Copy dish and section photo rows from the local database into the hosted one (safe to repeat).
 
 The photos are fetched from Unsplash into the local database (python -m app.dish_photos). The live site has its own
 database, so after fetching run this once from backend/:
