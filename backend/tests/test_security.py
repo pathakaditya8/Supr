@@ -342,3 +342,32 @@ def test_student_can_sign_up_only_with_name_yearcourse_bmu_address(client):
     assert two_part.status_code == 200
     students = {u["email"] for u in client.get("/api/admin/students", headers=login(client, "admin@supr.bmu.edu.in")).json()}
     assert good in students and f"{tag}.sharma.25bba@bmu.edu.in" in students   # they appear in the admin's student list
+
+
+def test_new_vendor_is_visible_to_the_admin_straight_after_registering(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    name = f"Fresh Bites {time.time_ns() % 100000}"
+    email = f"fresh-{time.time_ns()}@supr.test"
+    before = {n["id"] for n in client.get("/api/notifications", headers=admin).json()["items"]}
+    r = client.post("/api/auth/register", json={"name": name, "email": email, "password": TEST_PASSWORD, "role": "vendor"})
+    assert r.status_code == 200, r.text
+    # 1. the admin sees the vendor at once, labelled as not yet applied, and cannot approve something that was never sent
+    listing = client.get("/api/admin/applications", headers=admin).json()
+    row = next(a for a in listing if a["business_name"] == name)
+    assert row["status"] == "unapplied" and row["vendor_status"] == "unapplied" and row["email"] == email and row["documents"] == []
+    assert client.post(f"/api/admin/applications/{row['id']}/decision", headers=admin, json={"decision": "approved", "agreement_valid": True}).status_code == 404
+    assert client.get("/api/admin/metrics", headers=admin).json()["unapplied_vendors"] >= 1
+    # 2. the admin is told about it
+    notes = [n for n in client.get("/api/notifications", headers=admin).json()["items"] if n["id"] not in before]
+    assert any("New vendor registered" in n["message"] and name in n["message"] for n in notes)
+    # 3. sending the application turns it into a pending application and notifies the admin again
+    vendor = login(client, email, TEST_PASSWORD)
+    sent = client.post("/api/vendor/applications", headers=vendor, json={"business_name": name, "phone": "9000000001", "description": "Snacks", "business_address": "Near BMU gate", "contact_person": "Owner Name"})
+    assert sent.status_code in (200, 201), sent.text
+    after = client.get("/api/admin/applications", headers=admin).json()
+    assert [a["status"] for a in after if a["business_name"] == name] == ["pending"]          # no duplicate "unapplied" row
+    assert any("sent a vendor application" in n["message"] and name in n["message"] for n in client.get("/api/notifications", headers=admin).json()["items"] if n["id"] not in before)
+    # 4. the history records both steps
+    vendor_id = row["vendor_id"]
+    labels = [h["label"] for h in client.get(f"/api/admin/history?vendor_id={vendor_id}", headers=admin).json()]
+    assert "Vendor registered" in labels and "Application submitted" in labels

@@ -466,3 +466,20 @@ def test_e2e_23_student_signs_up_with_a_name_yearcourse_bmu_address(new_page):
     expect(page.locator(".form-modal").get_by_role("heading", name="Join your neighbourhood.")).to_be_visible()
     page.locator(".form-modal").get_by_role("button", name="Sign in", exact=True).click()
     expect(page.locator(".form-modal").get_by_role("heading", name="Good to see you.")).to_be_visible()
+
+
+def test_e2e_24_new_vendor_appears_for_the_admin_before_it_applies(new_page):
+    call("POST", "/api/auth/register", {"name": "Brand New Bites", "email": "brandnew@supr.test", "password": "Strong-pass-123", "role": "vendor"})
+    page = new_page()
+    sign_in(page, ADMIN)
+    tab(page, "Applications")
+    card = page.locator(".application-card").filter(has_text="Brand New Bites")
+    expect(card).to_be_visible()
+    expect(card).to_contain_text("not applied yet")
+    expect(card).to_contain_text("nothing to approve")
+    expect(card.get_by_role("button", name=re.compile("^Approve"))).to_have_count(0)
+    card.get_by_role("button", name="Approval history").click()
+    expect(card.locator(".vendor-history-panel")).to_contain_text("Vendor registered")
+    page.locator(".account-btn").click()
+    page.locator(".profile-dropdown").get_by_role("button", name=re.compile("Notifications")).click()
+    expect(page.get_by_text(re.compile("New vendor registered: Brand New Bites"))).to_be_visible()

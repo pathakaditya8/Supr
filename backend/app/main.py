@@ -55,6 +55,8 @@ def vendor_for(user, db):
 def active_vendor(v):
     if v.status != "approved": raise HTTPException(403, "Only approved vendors can manage listings and orders")
 def notify(db, uid, kind, message): db.add(m.Notification(recipient_id=uid,event_type=kind,message=message))
+def notify_admins(db, kind, message):
+    for admin_id in db.scalars(select(m.User.id).where(m.User.role=="admin",m.User.enabled.is_(True))): notify(db,admin_id,kind,message)
 def audit(db, admin, vendor, action, decision, remarks="", application_id=None):
     db.add(m.ApprovalHistory(admin_id=admin.id,vendor_id=vendor.id,application_id=application_id,action=action,decision=decision,remarks=remarks))
     db.add(m.AuditLog(actor_id=admin.id,event_type=action,entity_type="vendor",entity_id=vendor.id,details=f"{decision}: {remarks}"))
@@ -153,7 +155,9 @@ def register(data:s.RegisterIn, db:Session=Depends(get_db)):
     if db.scalar(select(m.User).where(m.User.email==email)): raise HTTPException(409,"An account with this email already exists")
     user=m.User(name=data.name.strip(),email=email,password_hash=hash_password(data.password),role=data.role)
     db.add(user); db.flush()
-    if data.role=="vendor": db.add(m.Vendor(user_id=user.id,business_name=data.name.strip(),status="unapplied"))
+    if data.role=="vendor":
+        db.add(m.Vendor(user_id=user.id,business_name=data.name.strip(),status="unapplied"))
+        notify_admins(db,"vendor_registered",f"New vendor registered: {data.name.strip()} ({email}). They have not sent their application yet.")
     db.commit(); db.refresh(user)
     return {"access_token":issue_token(user.id,user.role),"token_type":"bearer","user":{"id":user.id,"name":user.name,"email":user.email,"phone":user.phone,"role":user.role}}
 
@@ -258,7 +262,8 @@ def submit_application(data:s.ApplicationIn,u:m.User=Depends(allow("vendor")),db
         application=existing; application.business_address=data.business_address; application.contact_person=data.contact_person; application.agreement_reference=data.agreement_reference; application.status="pending"; application.decision_at=None; application.decision_remarks=""
     else:
         application=m.VendorApplication(vendor_id=v.id,business_address=data.business_address,contact_person=data.contact_person,agreement_reference=data.agreement_reference); db.add(application)
-    db.flush(); notify(db,u.id,"application_submitted","Your vendor application is awaiting University review."); db.commit()
+    db.flush(); notify(db,u.id,"application_submitted","Your vendor application is awaiting University review.")
+    notify_admins(db,"application_submitted",f"{v.business_name} sent a vendor application for review."); db.commit()
     return {"id":application.id,"status":application.status,"submitted_at":application.submitted_at}
 
 @app.get("/api/vendor/application")
@@ -563,7 +568,12 @@ def admin_applications(status:str|None=None,u:m.User=Depends(allow("admin")),db:
     stmt=select(m.VendorApplication).join(m.Vendor)
     if status: stmt=stmt.where(m.VendorApplication.status==status)
     rows=db.scalars(stmt.order_by(m.VendorApplication.submitted_at.desc())).all()
-    return [{"id":a.id,"vendor_id":a.vendor_id,"user_id":a.vendor.user_id,"business_name":a.vendor.business_name,"email":a.vendor.user.email,"phone":a.vendor.phone,"description":a.vendor.description,"minimum_order_amount":float(a.vendor.minimum_order_amount) if a.vendor.minimum_order_amount is not None else None,"delivery_terms_note":a.vendor.delivery_terms_note,"terms_confirmed":a.vendor.terms_confirmed,"business_address":a.business_address,"contact_person":a.contact_person,"agreement_reference":a.agreement_reference,"agreement_valid":a.vendor.agreement_valid,"vendor_status":a.vendor.status,"status":a.status,"decision_remarks":a.decision_remarks,"submitted_at":a.submitted_at,"documents":[{"id":d.id,"filename":d.filename,"url":f"/api/admin/documents/{d.id}"} for d in db.scalars(select(m.VendorDocument).where(m.VendorDocument.application_id==a.id))]} for a in rows]
+    result=[{"id":a.id,"vendor_id":a.vendor_id,"user_id":a.vendor.user_id,"business_name":a.vendor.business_name,"email":a.vendor.user.email,"phone":a.vendor.phone,"description":a.vendor.description,"minimum_order_amount":float(a.vendor.minimum_order_amount) if a.vendor.minimum_order_amount is not None else None,"delivery_terms_note":a.vendor.delivery_terms_note,"terms_confirmed":a.vendor.terms_confirmed,"business_address":a.business_address,"contact_person":a.contact_person,"agreement_reference":a.agreement_reference,"agreement_valid":a.vendor.agreement_valid,"vendor_status":a.vendor.status,"status":a.status,"decision_remarks":a.decision_remarks,"submitted_at":a.submitted_at,"documents":[{"id":d.id,"filename":d.filename,"url":f"/api/admin/documents/{d.id}"} for d in db.scalars(select(m.VendorDocument).where(m.VendorDocument.application_id==a.id))]} for a in rows]
+    if status in (None,"unapplied"):          # vendors who registered but have not sent their business details yet
+        waiting=db.scalars(select(m.Vendor).join(m.User,m.Vendor.user_id==m.User.id).where(m.Vendor.status=="unapplied").order_by(m.User.created_at.desc())).all()
+        result+=[{"id":-v.id,"vendor_id":v.id,"user_id":v.user_id,"business_name":v.business_name,"email":v.user.email,"phone":v.phone,"description":v.description,"minimum_order_amount":None,"delivery_terms_note":"","terms_confirmed":False,
+                  "business_address":"","contact_person":"","agreement_reference":"","agreement_valid":None,"vendor_status":"unapplied","status":"unapplied","decision_remarks":"","submitted_at":v.user.created_at,"documents":[]} for v in waiting]
+    return result
 
 @app.get("/api/admin/documents/{doc_id}")
 def admin_document(doc_id:int,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
@@ -616,6 +626,11 @@ def admin_history(vendor_id:int|None=None,u:m.User=Depends(allow("admin")),db:Se
     for a in db.scalars(apps):
         rows.append({"id":-a.id,"admin_id":None,"vendor_id":a.vendor_id,"vendor_name":names.get(a.vendor_id,f"Vendor #{a.vendor_id}"),"application_id":a.id,"action":"application_submitted","decision":"submitted",
                      "label":"Application submitted","by":"Vendor","remarks":"","created_at":a.submitted_at})
+    registered=select(m.Vendor).where(m.Vendor.status!="listed")
+    if vendor_id is not None: registered=registered.where(m.Vendor.id==vendor_id)
+    for v in db.scalars(registered):
+        rows.append({"id":-1000000-v.id,"admin_id":None,"vendor_id":v.id,"vendor_name":names.get(v.id,f"Vendor #{v.id}"),"application_id":None,"action":"vendor_registered","decision":"registered",
+                     "label":"Vendor registered","by":"Vendor","remarks":"","created_at":v.user.created_at})
     rows.sort(key=lambda r:(r["created_at"],r["id"]),reverse=True)
     return rows
 
@@ -653,7 +668,7 @@ def admin_remove_student(student_id:int,u:m.User=Depends(allow("admin")),db:Sess
 @app.get("/api/admin/metrics")
 def admin_metrics(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
     def count(query): return db.scalar(query) or 0
-    return {"students":count(select(func.count()).select_from(m.User).where(m.User.role=="student",m.User.enabled.is_(True))),"vendors":count(select(func.count()).select_from(m.Vendor)),"active_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="approved")),"pending_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="pending")),"approved_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="approved")),"rejected_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="rejected")),"stopped_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="stopped")),"orders":count(select(func.count()).select_from(m.Order)),"sales":float(count(select(func.sum(m.Order.subtotal)).where(m.Order.status!="cancelled")))}
+    return {"students":count(select(func.count()).select_from(m.User).where(m.User.role=="student",m.User.enabled.is_(True))),"vendors":count(select(func.count()).select_from(m.Vendor)),"active_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="approved")),"unapplied_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="unapplied")),"pending_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="pending")),"approved_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="approved")),"rejected_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="rejected")),"stopped_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="stopped")),"orders":count(select(func.count()).select_from(m.Order)),"sales":float(count(select(func.sum(m.Order.subtotal)).where(m.Order.status!="cancelled")))}
 
 @app.get("/api/vendor/metrics")
 def vendor_metrics(u:m.User=Depends(allow("vendor")),db:Session=Depends(get_db)):
