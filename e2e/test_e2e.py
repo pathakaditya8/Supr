@@ -559,3 +559,48 @@ def test_e2e_26_vendor_application_needs_at_least_two_delivery_partners(new_page
     sign_in(page, ADMIN)
     tab(page, "Applications")
     expect(page.locator(".application-card").filter(has_text="Two Riders Cafe")).to_contain_text("Delivery partners: 2")
+
+
+def test_e2e_27_vendor_opens_an_order_to_see_the_student_and_every_line(new_page):
+    clear_cart(STUDENT)
+    kathi = token(KATHI)
+    product = next(p for p in call("GET", "/api/products?vendor_id=2&available_only=true&limit=50")["items"] if p["name"] == "Aloo Roll")
+    student = token(STUDENT)
+    call("POST", "/api/cart/items", {"product_id": product["id"], "quantity": 2}, token=student)
+    order = call("POST", "/api/orders", {"delivery_location": ""}, token=student)
+    page = new_page()
+    sign_in(page, KATHI)
+    tab(page, "Orders")
+    row = page.locator(".record-row").filter(has_text=f"Order #{order['id']}")
+    expect(row).to_be_visible()
+    # the buttons inside the row still work without opening the details
+    row.get_by_role("button", name="Accept").click()
+    expect(page.locator(".order-detail")).to_have_count(0)
+    expect(row.get_by_role("button", name="Mark preparing")).to_be_visible()
+    # clicking the order opens everything about it
+    row.click(position={"x": 12, "y": 12})
+    detail = page.locator(".order-detail")
+    expect(detail).to_be_visible()
+    expect(detail.get_by_role("heading", name=f"Order #{order['id']}")).to_be_visible()
+    expect(detail).to_contain_text("Aarav Mehta")
+    expect(detail.get_by_role("link", name=STUDENT)).to_be_visible()
+    expect(detail).to_contain_text("Aloo Roll")
+    expect(detail).to_contain_text("× 2")
+    expect(detail.locator(".order-detail-total")).to_contain_text(f"{order['subtotal']:.2f}")
+    expect(detail).to_contain_text("Pickup from the shop")
+    page.keyboard.press("Escape")
+    expect(detail).to_have_count(0)
+    assert call("GET", f"/api/orders/{order['id']}", token=kathi)["student"]["email"] == STUDENT
+    clear_cart(STUDENT)
+
+
+def test_e2e_28_menu_categories_start_with_meals_and_snacks_and_are_food_only(new_page):
+    page = new_page()
+    page.get_by_role("navigation").get_by_role("button", name="Menu", exact=True).click()
+    chips = page.locator(".category-chips .chip")
+    expect(chips.first).to_have_text("Everything")
+    expect(chips.nth(1)).to_have_text("Meals and Main Course")
+    expect(chips.nth(2)).to_have_text("Snacks and Quick Bites")
+    names = chips.all_inner_texts()
+    assert not any("Laptop" in n or "Phone" in n for n in names), names
+    assert names[3:] == sorted(names[3:])                                   # the rest stay A to Z

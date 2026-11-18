@@ -419,3 +419,32 @@ def test_application_needs_at_least_two_delivery_partners(client):
     assert ok.status_code == 201, ok.text
     row = next(a for a in client.get("/api/admin/applications", headers=admin).json() if a["email"] == email)
     assert row["status"] == "pending" and row["delivery_partners"] == 2    # the admin can see the number
+
+
+def test_vendor_can_open_an_order_and_see_the_student_and_every_line(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    kathi_item, _ = stocked_item("Kathi Junction")
+    domino_item, _ = stocked_item("Domino's", "Garlic Breadsticks")
+    student_id, student = new_student(client, admin, "orderdetail")
+    order_id = place_order(client, student, kathi_item)
+    kathi, dominos = login(client, "kathijunction@supr.demo"), login(client, "dominos@supr.demo")
+
+    detail = client.get(f"/api/orders/{order_id}", headers=kathi)
+    assert detail.status_code == 200, detail.text
+    d = detail.json()
+    assert d["id"] == order_id and d["status"] == "pending" and d["vendor"]["name"] == "Kathi Junction"
+    assert d["student"]["id"] == student_id and d["student"]["name"] == "Security orderdetail"
+    assert d["student"]["email"].endswith("@supr.test") and d["student"]["phone"] == "9000000000"
+    assert len(d["items"]) == 1 and d["items"][0]["quantity"] == 1 and d["items"][0]["line_total"] == d["items"][0]["unit_price"] == d["subtotal"]
+    assert d["item_count"] == 1 and "created_at" in d
+
+    # privacy: another vendor, another student and anonymous callers cannot read it; the admin can
+    assert client.get(f"/api/orders/{order_id}", headers=dominos).status_code == 404
+    _, other = new_student(client, admin, "someoneelse")
+    assert client.get(f"/api/orders/{order_id}", headers=other).status_code == 404
+    assert client.get(f"/api/orders/{order_id}").status_code in (401, 403)
+    assert client.get(f"/api/orders/{order_id}", headers=admin).status_code == 200
+    # the student sees their own order but not their own contact block
+    own = client.get(f"/api/orders/{order_id}", headers=student)
+    assert own.status_code == 200 and own.json()["student"] is None
+    assert client.get("/api/orders/999999", headers=kathi).status_code == 404

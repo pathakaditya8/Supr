@@ -447,3 +447,24 @@ body{font-size:16px}
 .auth-switch button{border:0;background:none;padding:0;color:var(--green);font:inherit;font-weight:600;text-decoration:underline;cursor:pointer}
 .pill.unapplied{background:#fff4dc;color:#8a5a00}
 .unapplied-note{color:#7a5617}
+
+/* Order details (vendor and admin) */
+.order-row-clickable{cursor:pointer;transition:border-color .15s,box-shadow .15s}
+.order-row-clickable:hover,.order-row-clickable:focus-visible{border-color:var(--green);box-shadow:0 6px 18px rgba(22,63,77,.08);outline:none}
+.order-open-hint{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-size:14px;font-weight:600}
+.order-row-actions{display:flex;flex-wrap:wrap;gap:8px;cursor:default}
+.order-detail{max-width:560px;max-height:min(90vh,820px);overflow:auto}
+.order-detail h2{margin:4px 0 12px}
+.order-detail-top{display:flex;flex-wrap:wrap;align-items:center;gap:10px 14px;margin-bottom:14px;color:#5f6c69;font-size:14px}
+.order-detail-card{margin-top:14px;padding:16px;border:1px solid #e1e9e7;border-radius:12px;background:#fbfdfc}
+.order-detail-card h3{display:flex;align-items:center;gap:8px;margin:0 0 10px;font-size:15px;color:var(--ink)}
+.order-detail-card dl{margin:0;display:grid;gap:8px}
+.order-detail-card dl>div{display:grid;grid-template-columns:120px 1fr;gap:10px;font-size:15px}
+.order-detail-card dt{color:#5f6c69}.order-detail-card dd{margin:0;color:var(--ink);overflow-wrap:anywhere}
+.order-detail-card a{color:var(--green);font-weight:600}
+.order-detail-lines{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+.order-detail-lines li{display:flex;justify-content:space-between;gap:12px;padding-bottom:10px;border-bottom:1px solid #e9eeec}
+.order-detail-lines li div{display:grid;gap:2px}.order-detail-lines small{color:#5f6c69;font-size:13px}
+.order-detail-total{display:flex;justify-content:space-between;margin-top:12px;font-size:17px}
+.order-detail-note{display:block;margin-top:8px;color:#5f6c69}
+@media(max-width:520px){.order-detail-card dl>div{grid-template-columns:1fr;gap:2px}}

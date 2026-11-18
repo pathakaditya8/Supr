@@ -504,6 +504,25 @@ def orders(u:m.User=Depends(current_user),db:Session=Depends(get_db)):
     rows=db.scalars(stmt).all()
     return [{"id":o.id,"student_id":o.student_id,"student_name":db.get(m.User,o.student_id).name,"vendor_id":o.vendor_id,"vendor_name":db.get(m.Vendor,o.vendor_id).business_name,"status":o.status,"subtotal":float(o.subtotal),"campus_delivery":o.campus_delivery,"delivery_location":o.delivery_location,"delivery_stage":o.delivery_stage,"created_at":o.created_at,"items":[{"name":i.product_name,"quantity":i.quantity,"unit_price":float(i.unit_price),"variant_name":i.variant_name,"addons":json.loads(i.addons_json or "[]")} for i in o.items]} for o in rows]
 
+@app.get("/api/orders/{order_id}")
+def order_detail(order_id:int,u:m.User=Depends(current_user),db:Session=Depends(get_db)):
+    """Full details of one order: the student (name, email, phone), delivery, every line with options, and totals.
+    A student sees only their own order, a vendor only orders placed with their shop, an admin any order."""
+    order=db.get(m.Order,order_id)
+    if not order: raise HTTPException(404,"Order not found")
+    if u.role=="student" and order.student_id!=u.id: raise HTTPException(404,"Order not found")
+    if u.role=="vendor" and order.vendor_id!=vendor_for(u,db).id: raise HTTPException(404,"Order not found")
+    if u.role not in ("student","vendor","admin"): raise HTTPException(403,"This account cannot access orders")
+    student=db.get(m.User,order.student_id); vendor=db.get(m.Vendor,order.vendor_id)
+    lines=[]
+    for i in order.items:
+        unit=Decimal(str(i.unit_price))           # already includes the chosen size and add-ons
+        lines.append({"name":i.product_name,"variant_name":i.variant_name,"addons":json.loads(i.addons_json or "[]"),"quantity":i.quantity,"unit_price":float(unit),"line_total":float(unit*i.quantity)})
+    return {"id":order.id,"status":order.status,"created_at":order.created_at,"subtotal":float(order.subtotal),"campus_delivery":order.campus_delivery,
+            "delivery_location":order.delivery_location,"delivery_stage":order.delivery_stage,
+            "student":{"id":student.id,"name":student.name,"email":student.email,"phone":student.phone} if u.role!="student" else None,
+            "vendor":{"id":vendor.id,"name":vendor.business_name,"phone":vendor.phone},"items":lines,"item_count":sum(i.quantity for i in order.items)}
+
 @app.patch("/api/orders/{order_id}/status")
 def update_order_status(order_id:int,data:s.StatusIn,u:m.User=Depends(allow("vendor")),db:Session=Depends(get_db)):
     v=vendor_for(u,db); active_vendor(v); order=db.get(m.Order,order_id)
