@@ -413,3 +413,27 @@ body{font-size:16px}
 .admin-reset-form .temp-password{display:flex;align-items:center}
 .admin-reset-btn{min-height:40px}
 .student-account-row:has(.admin-reset-form) .remove-student-btn{height:46px;min-height:46px;border-radius:10px;padding:0 16px}
+
+/* Approval history (admin) */
+.admin-history{width:min(100%,920px)}
+.admin-history-bar{display:flex;align-items:end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap}
+.admin-history-bar label{display:grid;gap:6px;font-size:14px;color:#4b5a57}
+.admin-history-bar select{min-height:44px;min-width:240px;padding:0 12px;border:1px solid #cfdcda;border-radius:10px;background:#fff;font:inherit;font-size:15px}
+.admin-history-bar>span{color:#5f6c69;font-size:14px}
+.history-timeline{list-style:none;margin:0;padding:0;display:grid;gap:0}
+.history-item{position:relative;display:flex;gap:14px;padding:0 0 18px 0}
+.history-item::before{content:"";position:absolute;left:6px;top:16px;bottom:-2px;width:2px;background:#dce7e6}
+.history-item:last-child::before{display:none}
+.history-dot{flex:none;width:14px;height:14px;margin-top:4px;border-radius:50%;background:#fff;border:3px solid #8aa8a6;z-index:1}
+.history-item.approved .history-dot{border-color:#2f7d5b}
+.history-item.rejected .history-dot,.history-item.stopped .history-dot{border-color:#b42318}
+.history-item.submitted .history-dot{border-color:#c7861a}
+.history-body{flex:1;min-width:0;padding:12px 16px;background:#fff;border:1px solid #e1e9e7;border-radius:12px}
+.history-head{display:flex;align-items:baseline;gap:8px 12px;flex-wrap:wrap}
+.history-head b{font-size:16px;color:var(--ink)}
+.history-vendor{padding:2px 10px;border-radius:999px;background:#e3f1f0;color:var(--green);font-size:13px;font-weight:600}
+.history-head time{margin-left:auto;color:#5f6c69;font-size:13px}
+.history-by{margin-top:4px;color:#5f6c69;font-size:14px}
+.history-remarks{margin:8px 0 0;color:#38413f;font-size:14px;line-height:1.5}
+.vendor-history-panel{flex-basis:100%;width:100%;margin-top:8px;padding:16px 16px 0;background:#f7faf9;border:1px solid #e1e9e7;border-radius:12px}
+.application-actions{flex-wrap:wrap}

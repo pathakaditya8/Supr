@@ -395,3 +395,26 @@ def test_e2e_20_emptied_bag_lets_you_start_with_another_vendor_without_a_prompt(
     expect(page.get_by_text("Garlic Breadsticks added to your bag")).to_be_visible()
     assert len(page.dialog_messages) == n, "no 'clear your cart' prompt should appear for an empty bag"
     clear_cart(STUDENT)
+
+
+def test_e2e_21_admin_sees_a_readable_approval_history_per_vendor(new_page):
+    page = new_page()
+    sign_in(page, ADMIN)
+    tab(page, "Approval history")
+    history = page.locator(".admin-history")
+    expect(history.get_by_text("Approved").first).to_be_visible()
+    expect(history.get_by_text("By BMU Marketplace Admin").first).to_be_visible()
+    expect(history.locator(".history-vendor").first).to_be_visible()                 # vendor names, not "Vendor #4"
+    expect(history.get_by_text(re.compile(r"^Vendor #\d+$"))).to_have_count(0)
+    history.get_by_label("Vendor").select_option(label="Kathi Junction")
+    names = history.locator(".history-vendor")
+    expect(names).to_have_count(0)                                                   # filtered: the vendor name is not repeated on every row
+    expect(history.locator(".history-item").first).to_be_visible()
+    # per-vendor timeline on the vendor card
+    tab(page, "Applications")
+    card = page.locator(".application-card").filter(has_text="Kathi Junction")
+    card.get_by_role("button", name="Approval history").click()
+    expect(card.locator(".vendor-history-panel .history-item").first).to_be_visible()
+    expect(card.locator(".vendor-history-panel")).to_contain_text("Application submitted")
+    card.get_by_role("button", name="Hide history").click()
+    expect(card.locator(".vendor-history-panel")).to_have_count(0)

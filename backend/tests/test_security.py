@@ -302,3 +302,21 @@ def test_emptied_cart_does_not_block_switching_vendors(client, auth_headers):
     r = client.post("/api/cart/items", headers=student, json={"product_id": second, "quantity": 1})
     assert r.status_code == 201, r.text
     assert r.json()["vendor_id"] == second_vendor
+
+
+def test_admin_history_names_vendors_admins_and_every_decision(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    _, vendor_id = stocked_item("Kathi Junction")
+    assert client.post(f"/api/admin/vendors/{vendor_id}/participation", headers=admin, json={"status": "stopped"}).status_code == 200
+    assert client.post(f"/api/admin/vendors/{vendor_id}/participation", headers=admin, json={"status": "approved"}).status_code == 200
+    rows = client.get("/api/admin/history", headers=admin).json()
+    assert rows and all(r["vendor_name"] and not r["vendor_name"].startswith("Vendor #") for r in rows)
+    mine = client.get(f"/api/admin/history?vendor_id={vendor_id}", headers=admin).json()
+    assert mine and {r["vendor_id"] for r in mine} == {vendor_id}
+    labels = [r["label"] for r in mine]
+    assert "Participation stopped" in labels and "Participation restarted" in labels
+    assert labels.index("Participation restarted") < labels.index("Participation stopped")      # newest first
+    decided = [r for r in mine if r["action"] in ("vendor_stopped", "vendor_restarted")]
+    assert all(r["by"] == "BMU Marketplace Admin" for r in decided)
+    assert any(r["action"] == "application_submitted" and r["by"] == "Vendor" for r in mine)
+    assert client.get("/api/admin/history", headers=login(client, "kathijunction@supr.demo")).status_code == 403

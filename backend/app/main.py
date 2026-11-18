@@ -578,7 +578,7 @@ def decide_application(aid:int,data:s.DecisionIn,u:m.User=Depends(allow("admin")
     if data.decision=="approved" and data.agreement_valid is None: raise HTTPException(400,"Record agreement validity before approval")
     a.status=data.decision; a.decision_remarks=data.remarks.strip(); a.decision_at=m.now_utc(); v.status=data.decision
     if data.agreement_valid is not None: v.agreement_valid=data.agreement_valid; v.agreement_checked_at=m.now_utc()
-    audit(db,u,v,"application_decision",data.decision,data.remarks,a.id); notify(db,v.user_id,"application_decision",f"Your vendor application was {data.decision}."); db.commit(); return {"application_id":a.id,"status":a.status,"agreement_valid":v.agreement_valid}
+    audit(db,u,v,"application_decision",data.decision,(data.remarks.strip()+{None:"",True:" Agreement recorded as valid.",False:" Agreement recorded as not valid."}[data.agreement_valid]).strip(),a.id); notify(db,v.user_id,"application_decision",f"Your vendor application was {data.decision}."); db.commit(); return {"application_id":a.id,"status":a.status,"agreement_valid":v.agreement_valid}
 
 @app.post("/api/admin/vendors/{vid}/participation")
 def participation(vid:int,data:s.StatusIn,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
@@ -589,10 +589,25 @@ def participation(vid:int,data:s.StatusIn,u:m.User=Depends(allow("admin")),db:Se
     if data.status=="approved": v.status="approved"
     audit(db,u,v,action,data.status); notify(db,v.user_id,action,f"Marketplace participation has been {data.status}."); db.commit(); return {"vendor_id":v.id,"status":v.status}
 
+HISTORY_LABELS={("application_decision","approved"):"Approved",("application_decision","rejected"):"Rejected",("vendor_stopped","stopped"):"Participation stopped",("vendor_restarted","approved"):"Participation restarted"}
+
 @app.get("/api/admin/history")
-def admin_history(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
-    rows=db.scalars(select(m.ApprovalHistory).order_by(m.ApprovalHistory.created_at.desc())).all()
-    return [{"id":x.id,"admin_id":x.admin_id,"vendor_id":x.vendor_id,"application_id":x.application_id,"action":x.action,"decision":x.decision,"remarks":x.remarks,"created_at":x.created_at} for x in rows]
+def admin_history(vendor_id:int|None=None,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
+    """Every vendor decision (approved, rejected, stopped, restarted) with who made it, plus when each vendor applied."""
+    names={v.id:v.business_name for v in db.scalars(select(m.Vendor))}
+    admins={x.id:x.name for x in db.scalars(select(m.User).where(m.User.role=="admin"))}
+    stmt=select(m.ApprovalHistory)
+    if vendor_id is not None: stmt=stmt.where(m.ApprovalHistory.vendor_id==vendor_id)
+    rows=[{"id":x.id,"admin_id":x.admin_id,"vendor_id":x.vendor_id,"vendor_name":names.get(x.vendor_id,f"Vendor #{x.vendor_id}"),"application_id":x.application_id,
+           "action":x.action,"decision":x.decision,"label":HISTORY_LABELS.get((x.action,x.decision),x.action.replace("_"," ").capitalize()),
+           "by":admins.get(x.admin_id,"University admin"),"remarks":x.remarks,"created_at":x.created_at} for x in db.scalars(stmt)]
+    apps=select(m.VendorApplication).join(m.Vendor).where(m.Vendor.status!="listed")
+    if vendor_id is not None: apps=apps.where(m.VendorApplication.vendor_id==vendor_id)
+    for a in db.scalars(apps):
+        rows.append({"id":-a.id,"admin_id":None,"vendor_id":a.vendor_id,"vendor_name":names.get(a.vendor_id,f"Vendor #{a.vendor_id}"),"application_id":a.id,"action":"application_submitted","decision":"submitted",
+                     "label":"Application submitted","by":"Vendor","remarks":"","created_at":a.submitted_at})
+    rows.sort(key=lambda r:(r["created_at"],r["id"]),reverse=True)
+    return rows
 
 @app.get("/api/admin/students")
 def admin_students(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
