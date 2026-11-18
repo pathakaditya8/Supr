@@ -483,3 +483,44 @@ def test_e2e_24_new_vendor_appears_for_the_admin_before_it_applies(new_page):
     page.locator(".account-btn").click()
     page.locator(".profile-dropdown").get_by_role("button", name=re.compile("Notifications")).click()
     expect(page.get_by_text(re.compile("New vendor registered: Brand New Bites"))).to_be_visible()
+
+
+def test_e2e_25_admin_food_listings_are_food_only_and_tech_has_its_own_page(new_page):
+    page = new_page()
+    sign_in(page, ADMIN)
+    tab(page, "Food listings")
+    expect(page.get_by_role("heading", name="Food listings", level=1)).to_be_visible()
+    rows = page.locator(".record-row")
+    expect(rows.first).to_be_visible()
+    food_text = " ".join(rows.all_inner_texts())
+    for shop in ("Hi-Tech Computer", "Make My Lappy", "Shivam Mobile", "Vislor", "AJ Mobile"):
+        assert shop not in food_text, f"{shop} should be on the Tech listings page"
+    assert "Laptop Repair" not in food_text and "Phone Repair" not in food_text
+    assert page.get_by_role("button", name="Add menu item").is_visible()
+
+    tab(page, "Tech listings")
+    expect(page.get_by_role("heading", name="Laptop and phone listings", level=1)).to_be_visible()
+    rows = page.locator(".record-row")
+    expect(rows.filter(has_text="Make My Lappy").first).to_be_visible()      # waits for the tech rows to arrive
+    tech_text = " ".join(rows.all_inner_texts())
+    assert "Make My Lappy" in tech_text and "Kathi Junction" not in tech_text and "Domino" not in tech_text and "Lazeez" not in tech_text
+    # adding a service offers only laptop and phone categories and listed shops
+    page.get_by_role("button", name="Add service").click()
+    form = page.locator(".form-modal")
+    expect(form.get_by_label("Category").locator("option")).to_have_count(5)      # "Choose category" plus the four tech categories
+    categories = form.get_by_label("Category").locator("option").all_inner_texts()
+    assert set(categories) - {"Choose category"} == {"Laptop Repair", "Laptops and Accessories", "Phone Repair", "Phones and Accessories"}
+    expect(form.get_by_label("Vendor").locator("option").nth(1)).to_be_attached()
+    vendors = form.get_by_label("Vendor").locator("option").all_inner_texts()
+    assert vendors and all("listed" in v or v == "Choose vendor" for v in vendors)
+    assert not any("Kathi" in v or "Domino" in v for v in vendors)
+    page.locator(".form-modal .modal-close").click()
+    # and the food form offers only food
+    tab(page, "Food listings")
+    page.get_by_role("button", name="Add menu item").click()
+    form = page.locator(".form-modal")
+    expect(form.get_by_label("Food category").locator("option").nth(1)).to_be_attached()
+    foods = form.get_by_label("Food category").locator("option").all_inner_texts()
+    assert foods and not any("Laptop" in c or "Phone" in c for c in foods)
+    vendors = form.get_by_label("Vendor").locator("option").all_inner_texts()
+    assert not any("listed" in v for v in vendors)

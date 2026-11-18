@@ -718,8 +718,11 @@ def product_image(filename:str,db:Session=Depends(get_db)):
     return Response(stored.content,media_type=stored.content_type,headers={"Cache-Control":"public, max-age=86400"})
 
 @app.get("/api/admin/listings")
-def admin_listings(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
-    rows=db.scalars(select(m.Product).options(*WITH_OPTIONS).order_by(m.Product.id.desc()).limit(2000)).all()
+def admin_listings(kind:str|None=None,u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
+    """kind=food lists food only; kind=tech lists laptop and phone services only; no kind lists everything."""
+    stmt=select(m.Product).options(*WITH_OPTIONS)
+    if kind in ("food","tech"): stmt=stmt.join(m.Category,m.Product.category_id==m.Category.id).where(m.Category.name.in_(FOOD_CATEGORIES if kind=="food" else TECH_CATEGORIES))
+    rows=db.scalars(stmt.order_by(m.Product.id.desc()).limit(2000)).all()
     return [{**product_out(p,db),"vendor_status":db.get(m.Vendor,p.vendor_id).status} for p in rows]
 
 @app.post("/api/admin/listings",status_code=201)
@@ -728,6 +731,7 @@ def admin_create_listing(data:s.AdminProductIn,u:m.User=Depends(allow("admin")),
     if not vendor: raise HTTPException(404,"Vendor not found")
     category=db.get(m.Category,data.category_id)
     if not category or category.name not in ALLOWED_CATEGORIES: raise HTTPException(422,"Choose an approved category")
+    if (vendor.status=="listed")!=(category.name in TECH_CATEGORIES): raise HTTPException(422,"Laptop and phone categories go with listed laptop and phone shops; food categories go with food vendors")
     values=data.model_dump(exclude={"vendor_id"})
     p=m.Product(vendor_id=vendor.id,menu_status="published",**values); db.add(p); db.flush()
     db.add(m.AuditLog(actor_id=u.id,event_type="admin_listing_created",entity_type="product",entity_id=p.id,details="status=published; available=False")); db.commit(); db.refresh(p)

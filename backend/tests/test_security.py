@@ -371,3 +371,30 @@ def test_new_vendor_is_visible_to_the_admin_straight_after_registering(client):
     vendor_id = row["vendor_id"]
     labels = [h["label"] for h in client.get(f"/api/admin/history?vendor_id={vendor_id}", headers=admin).json()]
     assert "Vendor registered" in labels and "Application submitted" in labels
+
+
+TECH_NAMES = {"Laptop Repair", "Laptops and Accessories", "Phone Repair", "Phones and Accessories"}
+
+
+def test_admin_listings_can_be_split_into_food_and_tech(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    everything = client.get("/api/admin/listings", headers=admin).json()
+    food = client.get("/api/admin/listings?kind=food", headers=admin).json()
+    tech = client.get("/api/admin/listings?kind=tech", headers=admin).json()
+    assert food and tech and len(food) + len(tech) == len(everything)
+    assert not {p["category"] for p in food} & TECH_NAMES and {p["category"] for p in tech} <= TECH_NAMES
+    assert {p["vendor_status"] for p in tech} == {"listed"} and "listed" not in {p["vendor_status"] for p in food}
+    assert client.get("/api/admin/listings?kind=food", headers=login(client, "kathijunction@supr.demo")).status_code == 403
+
+
+def test_admin_cannot_mix_food_and_tech_when_adding_a_listing(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    cats = {c["name"]: c["id"] for c in client.get("/api/categories").json()}
+    applications = client.get("/api/admin/applications", headers=admin).json()
+    food_vendor = next(a["vendor_id"] for a in applications if a["vendor_status"] == "approved")
+    tech_vendor = next(a["vendor_id"] for a in applications if a["vendor_status"] == "listed")
+    body = {"name": "Mixed Up Item", "price": 100, "stock": 1, "description": "", "available": True}
+    assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": food_vendor, "category_id": cats["Laptop Repair"]}).status_code == 422
+    assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": tech_vendor, "category_id": cats["Fast Food"]}).status_code == 422
+    assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": tech_vendor, "category_id": cats["Phone Repair"]}).status_code == 201
+    assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": food_vendor, "category_id": cats["Fast Food"]}).status_code == 201

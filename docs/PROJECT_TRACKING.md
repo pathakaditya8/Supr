@@ -30,7 +30,7 @@ Product backlog items still open: vendor terms screen, charts and report export,
 
 ## 3. Planned vs actual effort
 
-Owners and planned shares per member are in [`TEAM_WORK_SPLIT.md`](TEAM_WORK_SPLIT.md) (27 person-days each). Each member records their own actual days against their packages.
+Owners and planned shares per member are in [`TEAM_WORK_SPLIT.md`](TEAM_WORK_SPLIT.md): nine website modules, 27 person-days per member. Each member records their own actual days against the modules they own.
 
 Planned effort is from `PROJECT_PLAN.md` (108 person-days; 432 person-hours of capacity). Fill the **Actual** column from the team's own time log, then compute the variance.
 

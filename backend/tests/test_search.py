@@ -12,7 +12,7 @@ from app.models import Vendor
 
 def approve_all_vendors():
     db = SessionLocal()
-    for v in db.scalars(select(Vendor)): v.status = "approved"
+    for v in db.scalars(select(Vendor).where(Vendor.status != "listed")): v.status = "approved"   # listed shops stay listed
     db.commit(); db.close()
 
 

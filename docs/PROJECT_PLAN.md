@@ -4,7 +4,7 @@ All numbers below are planning estimates for a four-person student team, not act
 
 ## WBS and sprint plan
 
-Work is divided equally (27 person-days each) among Aakriti, Dhruv, Aditya and Anshika; see [`TEAM_WORK_SPLIT.md`](TEAM_WORK_SPLIT.md) for who owns each work package.
+Work is divided equally (27 person-days each) among Aakriti, Dhruv, Aditya and Anshika by module of the website; see [`TEAM_WORK_SPLIT.md`](TEAM_WORK_SPLIT.md) for who owns each module.
 
 | WBS | Work package | Deliverable | Estimate |
 |---|---|---|---:|

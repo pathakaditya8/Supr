@@ -1,79 +1,70 @@
-# Team work split: Aakriti, Dhruv, Aditya and Anshika
+# Team work split by website module: Aakriti, Dhruv, Aditya and Anshika
 
-This divides the project's planned effort (108 person-days, from `PROJECT_PLAN.md`) and the work still open into **four equal shares of 27 person-days each**, with a mix of requirements, build and testing for everyone so that each member can explain a complete slice in the viva.
+The project's planned effort is 108 person-days (see `PROJECT_PLAN.md`). It is divided here **by module of the website**, into four equal shares of **27 person-days** each. A member who owns a module owns it end to end: requirements, screen, API, database, tests and the documents about it. That way each person can explain and demonstrate a complete part of the software in the viva, which the handout grades through questions on the work presented.
 
-This is a **plan for who owns what**, not a record of who did what. It does not claim that anyone has already worked these hours. Actual hours go in [`PROJECT_TRACKING.md`](PROJECT_TRACKING.md).
+This is a **plan for who owns what**, not a record of who did what, so it claims no hours already worked. Actual hours go in [`PROJECT_TRACKING.md`](PROJECT_TRACKING.md).
 
 ## 1. Shares at a glance
 
-| Member | Main role | Planned person-days | Share |
+| Member | Modules owned | Planned person-days | Share |
 |---|---|---:|---:|
-| Aakriti | Requirements, design and documentation lead | 27 | 25% |
-| Dhruv | Backend, database and security lead | 27 | 25% |
-| Aditya | Frontend, user experience and deployment lead | 27 | 25% |
-| Anshika | Quality, testing and project-management lead | 27 | 25% |
+| Aakriti | M1 Accounts and access, M2 Vendor onboarding and approval | 27 | 25% |
+| Dhruv | M5 Cart, orders and tracking, M8 Data, deployment and operations, plus 2 days of security checks | 27 | 25% |
+| Aditya | M3 Marketplace and discovery, M7 Look, language and content, plus 1 day of frontend lint | 27 | 25% |
+| Anshika | M4 Vendor shop management, M6 Admin console, plus 3 days of test and project evidence | 27 | 25% |
 | **Total** | | **108** | **100%** |
 
-## 2. Work packages (WBS) by owner
+## 2. The modules
 
-| WBS | Work package | Total days | Aakriti | Dhruv | Aditya | Anshika |
-|---|---|---:|---:|---:|---:|---:|
-| 1 | Scope, SRS review, elicitation, MoSCoW | 10 | **10** | | | |
-| 2 | Architecture, ER, UML and DFD diagrams, project plan | 9 | **9** | | | |
-| 3 | Database, identity and vendor governance | 17 | | **17** | | |
-| 4 | Marketplace and vendor listing management | 14 | | | **9** | 5 |
-| 5 | Cart, checkout and order lifecycle | 15 | | **10** | | 5 |
-| 6 | React role workspaces and integration | 18 | | | **18** | |
-| 7 | Verification, fixes and security review | 15 | | | | **15** |
-| 8 | Course evidence, setup and demonstration | 10 | **8** | | | 2 |
-| | **Total** | **108** | **27** | **27** | **27** | **27** |
+| Module | What it covers in the website | Days | Owner |
+|---|---|---:|---|
+| **M1 Accounts and access** | Sign-in and sign-out, student self sign-up (name.yearcourse@bmu.edu.in), vendor registration form, roles and what each role may open, My profile, change password, admin sets another person's password | 12 | Aakriti |
+| **M2 Vendor onboarding and approval** | Vendor application form and documents, Applications tab, approve or reject with agreement validity and remarks, stop and restart a vendor, Approval history and per-vendor timeline, "registered, not applied yet" list, admin notifications | 15 | Aakriti |
+| **M3 Marketplace and discovery** | Landing page and shop listing, Menu, Discover and Vendors pages, the Tech page and listed shops, search, filters and sorting, product cards and detail, Favourites | 16 | Aditya |
+| **M4 Vendor shop management** | Vendor dashboard, adding and editing listings, item photos, stock and bulk in or out of stock, delivery places and the "All campus places" option, vendor orders screen | 14 | Anshika |
+| **M5 Cart, orders and tracking** | One-vendor bag and Clear bag, review and place order, server-side prices, stock locking, order lifecycle and delivery stages, Your orders, Order history, student and vendor order notifications | 17 | Dhruv |
+| **M6 Admin console** | Admin overview and counts, Students (add, remove, temporary password with show or hide), Food listings and Tech listings pages, admin add or edit of listings, notifications | 10 | Anshika |
+| **M7 Look, language and content** | Brand, logo and door intro, header and footer, English and Hindi switch, About, Help and How it works, responsive layouts, dish and shop photo system (credited Unsplash photos) | 10 | Aditya |
+| **M8 Data, deployment and operations** | Database models and migrations, menu and shop imports, `copy_data` and `sync_photos`, Render and Vercel setup, keep-awake ping, backups | 8 | Dhruv |
+| **M9 Test and project evidence** | Central test plan and traceability, security scans, lint, planned-versus-actual tracking, burndown and retrospectives | 6 | Anshika 3, Dhruv 2, Aditya 1 |
+| | **Total** | **108** | |
 
-## 3. What each person owns
+Every module owner also writes the tests and updates the documents for their own module; that effort is already inside each module's days.
 
-**Aakriti: requirements, design and documentation**
-- SRS, MoSCoW and the requirements traceability table (`REQUIREMENTS.md`, `OPEN_DECISIONS.md`).
-- The four UML and data diagrams: use case, sequence, DFD and ER (`docs/diagrams/`), and the PERT diagram.
-- The requirement elicitation fieldwork: run the student questionnaire and the vendor and admin interviews, then fill in `REQUIREMENT_ELICITATION.md`.
-- Course evidence: `COMPLETION_REPORT.md`, `SDLC_AND_ETHICS.md`, `AI_ENGINEERING.md`, and the viva walkthrough of the whole document set.
+## 3. Where each module lives in the code
 
-**Dhruv: backend, database and security**
-- Data model, migrations 0001 to 0014 and the hosted PostgreSQL database.
-- Authentication: sign-in, student self sign-up with the name.yearcourse@bmu.edu.in rule, password change and admin password reset.
-- Vendor governance: applications, documents, approve or reject, agreement validity, stop and restart, approval history.
-- Orders: the one-vendor cart, server-side prices, stock locking, the order lifecycle and notifications.
-- Deployment of the backend on Render (`render.yaml`, `copy_data`, `sync_photos`, keep-awake ping).
-
-**Aditya: frontend, experience and deployment**
-- The React site: student, vendor and admin workspaces, the Marketplace, Menu, Discover, Vendors and Tech pages, the bag and order tracking.
-- Vendor listing screens: item photos, stock controls, delivery places, and the dish and shop photo system.
-- Bilingual interface (English and Hindi), the brand and logo, accessibility and phone layouts.
-- Deployment of the website on Vercel (`vercel.json`) and the frontend lint clean-up.
-
-**Anshika: quality, testing and project management**
-- The test suites: API and security tests, Playwright browser tests and the performance test (`TEST_PLAN.md`).
-- Static analysis and dependency scans (Ruff, ESLint, Bandit, pip-audit, npm audit) and the defect log.
-- Sprint planning evidence, planned-versus-actual tracking, burndown and retrospectives (`PROJECT_TRACKING.md`, `PROJECT_PLAN.md`).
-- Risk register, QA and maintenance document (`QUALITY_MAINTENANCE.md`), and the demonstration script.
-
-## 4. Open work, two items each
-
-| # | Open item | Owner | Support |
+| Module | Backend (`backend/app/main.py` and related) | Website (`frontend/src/App.tsx`) | Tests |
 |---|---|---|---|
-| 1 | Run the elicitation questionnaire and interviews and write up the findings | Aakriti | Anshika |
-| 2 | Refresh the SRS, ER and sequence diagrams for self sign-up, history and Tech page changes | Aakriti | Dhruv |
-| 3 | Vendor terms confirmation screen (minimum order and delivery terms) | Dhruv | Aditya |
-| 4 | Charts and exportable reports for the admin and vendors | Dhruv | Aditya |
-| 5 | Fix the 25 ESLint findings and the 320 px home page overflow | Aditya | Anshika |
-| 6 | Remaining 11 dish photos, the headphones photo, and the Greenox menu from the vendor | Aditya | Aakriti |
-| 7 | Fill the time log, planned-versus-actual table and burndown; hold sprint retrospectives | Anshika | All |
-| 8 | Production hardening: rotate the database password, upgrade the free plans or export before the 30-day expiry, custom domain | Anshika | Dhruv |
+| M1 | `/api/auth/*`, `/api/student/profile`, `/api/admin/users/{id}/password` | `AuthModal`, `StudentProfile`, `AccountProfile`, `PasswordCard`, `AdminResetPassword` | `test_security.py` (registration, passwords), E2E 1, 7, 12 to 15, 17, 19, 23 |
+| M2 | `/api/vendor/applications*`, `/api/admin/applications`, `/decision`, `/participation`, `/api/admin/history` | `VendorApplication`, `AdminApplications`, `AdminHistory`, `VendorHistoryToggle` | `test_security.py` (history, new vendor), E2E 4, 21, 24 |
+| M3 | `/api/products`, `/api/vendors`, `/api/categories`, `dish_photos.py` queries | Landing page, `TechPage`, `VendorMenu`, `ProductCard`, `ProductDetail`, `SavedItems` | `test_search.py`, `test_listed_shops.py`, E2E 6, 8, 11 |
+| M4 | `/api/vendor/products*`, `/api/vendor/delivery-points`, bulk availability, product images | `VendorDeliveryManager`, `BulkAvailabilityBar`, `VendorPhotoButton`, vendor listing screens | `test_api.py`, E2E 5, 16 |
+| M5 | `/api/cart*`, `/api/orders*`, arrival and status updates | The bag, `OrderTracker`, `StudentActiveOrders`, `StudentOrderHistory` | `test_order_tracking.py`, `test_api.py`, E2E 2, 3, 20, 22 |
+| M6 | `/api/admin/metrics`, `/api/admin/students`, `/api/admin/listings` | `AdminStudents`, `AdminProductForm`, admin listing tabs | `test_security.py` (listings split), E2E 25 |
+| M7 | `dish_photos.py`, `vendor_images.py`, `import_unsplash_photos.py` | `SuprLogo`, `DoorIntro`, `DishPhoto`, `i18n.ts`, `styles.css`, About | `test_dish_photos.py`, `test_section_photos.py`, E2E 9, 10 |
+| M8 | `models.py`, `migrations/`, `seed.py`, `import_*.py`, `copy_data.py`, `sync_photos.py`, `keepalive.py`, `render.yaml` | `vercel.json` | `test_security.py` (keep-alive) |
+| M9 | `ruff.toml`, scans | `eslint.config.js` | `perf/load_test.py`, `docs/TEST_PLAN.md` |
+
+## 4. Open work, by module
+
+| Module | Open item | Owner |
+|---|---|---|
+| M1 | Email verification or a BMU student list so that sign-up can prove ownership of an address; a "forgot password" that does not need the admin | Aakriti |
+| M2 | Run the elicitation questionnaire and vendor and admin interviews and write the findings; vendor terms confirmation screen | Aakriti |
+| M3 | Fix the 320 px home page overflow; add more photo variety per dish type | Aditya |
+| M4 | Vendor analytics (charts and an exportable report); import the Greenox menu once the vendor supplies it | Anshika |
+| M5 | Live order-status refresh for the vendor without reloading; decide delivery charges and zones | Dhruv |
+| M6 | Admin charts and exportable reports; admin screens for the 25 open lint findings | Anshika |
+| M7 | Fetch the remaining 11 dish photos and replace the headphones photo; check Hindi wording with a native speaker | Aditya |
+| M8 | Rotate the exposed database password; upgrade or export the free Render database before its 30-day expiry; custom domain | Dhruv |
+| M9 | Fill the time log, planned-versus-actual table and burndown; hold sprint retrospectives | Anshika |
 
 ## 5. Shared duties
 
-- Every member reviews at least one other member's pull request or commit before it is merged.
+- Every member reviews at least one other member's change before it is merged.
 - Every member records their own hours weekly in the time log.
-- Each member prepares to explain their own area and to demonstrate one full user journey (student order, vendor fulfilment, admin approval) in the viva, because the handout grades the group project through questions on the work presented.
+- For the viva, each member prepares to explain and demonstrate their own modules, and everyone can walk through one full journey: a student order, a vendor fulfilling it, and the admin approving a vendor.
 
 ## 6. If the split needs to change
 
-The shares are equal in planned days. If someone's load changes, move whole packages or items between members, keep each member at 27 days, and update this table and the planned-versus-actual table.
+Move whole modules or items between members, keep each member at 27 days, and update the tables here and in `PROJECT_TRACKING.md`.
