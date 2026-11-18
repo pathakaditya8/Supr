@@ -3,6 +3,8 @@ import json
 import re
 import secrets
 from contextlib import asynccontextmanager
+from datetime import UTC, date, datetime, timedelta, timezone
+from datetime import time as dtime
 from decimal import Decimal
 from pathlib import Path
 
@@ -688,7 +690,61 @@ def admin_remove_student(student_id:int,u:m.User=Depends(allow("admin")),db:Sess
 @app.get("/api/admin/metrics")
 def admin_metrics(u:m.User=Depends(allow("admin")),db:Session=Depends(get_db)):
     def count(query): return db.scalar(query) or 0
-    return {"students":count(select(func.count()).select_from(m.User).where(m.User.role=="student",m.User.enabled.is_(True))),"vendors":count(select(func.count()).select_from(m.Vendor)),"active_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="approved")),"unapplied_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="unapplied")),"pending_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="pending")),"approved_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="approved")),"rejected_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="rejected")),"stopped_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="stopped")),"orders":count(select(func.count()).select_from(m.Order)),"sales":float(count(select(func.sum(m.Order.subtotal)).where(m.Order.status!="cancelled")))}
+    return {"students":count(select(func.count()).select_from(m.User).where(m.User.role=="student",m.User.enabled.is_(True))),"vendors":count(select(func.count()).select_from(m.Vendor)),"active_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="approved")),"unapplied_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="unapplied")),"pending_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="pending")),"approved_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="approved")),"rejected_applications":count(select(func.count()).select_from(m.VendorApplication).where(m.VendorApplication.status=="rejected")),"stopped_vendors":count(select(func.count()).select_from(m.Vendor).where(m.Vendor.status=="stopped")),"orders":count(select(func.count()).select_from(m.Order)),"sales":float(count(select(func.sum(m.Order.subtotal)).where(m.Order.status=="completed")))}
+
+IST=timezone(timedelta(hours=5,minutes=30))      # BMU is in India: sales are grouped by the day they happened in Indian time
+MONTHS=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"]
+
+def sale_day(created_at):
+    """The Indian calendar date of an order (database times are stored in UTC)."""
+    if created_at.tzinfo is None: created_at=created_at.replace(tzinfo=UTC)
+    return created_at.astimezone(IST).date()
+
+def bucket_for(day,period):
+    if period=="day": return day.isoformat(),f"{day.day} {MONTHS[day.month-1]} {day.year}"
+    if period=="month": return f"{day.year}-{day.month:02d}",f"{MONTHS[day.month-1]} {day.year}"
+    return str(day.year),str(day.year)
+
+def bucket_keys(start,end,period):
+    """Every day, month or year between two dates, so empty periods show as zero."""
+    keys=[]; d=start
+    while d<=end:
+        keys.append(bucket_for(d,period))
+        if period=="day": d+=timedelta(days=1)
+        elif period=="month": d=date(d.year+(d.month==12),d.month%12+1,1)
+        else: d=date(d.year+1,1,1)
+    return keys
+
+@app.get("/api/vendor/sales")
+def vendor_sales(period:str="day",start:date|None=None,end:date|None=None,u:m.User=Depends(allow("vendor")),db:Session=Depends(get_db)):
+    """Completed orders of the signed-in vendor, totalled by day, month or year (Indian time), plus the list of sales."""
+    if period not in ("day","month","year"): raise HTTPException(422,"Period must be day, month or year")
+    v=vendor_for(u,db); today=datetime.now(IST).date()
+    if end is None: end=today
+    if start is None:
+        start=end-timedelta(days=29) if period=="day" else date(end.year-(end.month<12),end.month%12+1,1) if period=="month" else date(end.year-4,1,1)
+    if start>end: raise HTTPException(422,"The start date must be on or before the end date")
+    if (end-start).days>3660: raise HTTPException(422,"Choose a range of up to 10 years")
+    if period=="day" and (end-start).days>365: raise HTTPException(422,"For day-by-day sales choose a range of up to one year")
+    lo=datetime.combine(start,dtime.min,tzinfo=IST).astimezone(UTC); hi=datetime.combine(end+timedelta(days=1),dtime.min,tzinfo=IST).astimezone(UTC)
+    naive=db.bind.dialect.name=="sqlite"                  # SQLite keeps times without a zone, PostgreSQL with one
+    if naive: lo,hi=lo.replace(tzinfo=None),hi.replace(tzinfo=None)
+    rows=db.scalars(select(m.Order).options(selectinload(m.Order.items)).where(m.Order.vendor_id==v.id,m.Order.status=="completed",m.Order.created_at>=lo,m.Order.created_at<hi).order_by(m.Order.created_at.desc())).all()
+    buckets={key:{"key":key,"label":label,"amount":Decimal("0"),"orders":0,"items":0} for key,label in bucket_keys(start,end,period)}
+    sales=[]; total=Decimal("0"); items=0
+    students={x.id:x.name for x in db.scalars(select(m.User).where(m.User.id.in_({o.student_id for o in rows})))} if rows else {}
+    for o in rows:
+        day=sale_day(o.created_at); key,_=bucket_for(day,period); qty=sum(i.quantity for i in o.items); amount=Decimal(str(o.subtotal))
+        b=buckets.get(key)
+        if b is None: continue
+        b["amount"]+=amount; b["orders"]+=1; b["items"]+=qty; total+=amount; items+=qty
+        sales.append({"id":o.id,"date":day.isoformat(),"student_name":students.get(o.student_id,""),"items":", ".join(f"{i.product_name} × {i.quantity}" for i in o.items),"item_count":qty,"amount":float(amount),"campus_delivery":o.campus_delivery})
+    series=[{**b,"amount":float(b["amount"])} for b in buckets.values()]
+    best=max((b for b in series if b["orders"]),key=lambda b:b["amount"],default=None)
+    return {"period":period,"start":start.isoformat(),"end":end.isoformat(),
+            "totals":{"amount":float(total),"orders":len(sales),"items":items,"average_order":round(float(total)/len(sales),2) if sales else 0.0},
+            "buckets":series,"best":{"key":best["key"],"label":best["label"],"amount":best["amount"]} if best else None,
+            "sales":sales[:500],"sales_truncated":len(sales)>500}
 
 @app.get("/api/vendor/metrics")
 def vendor_metrics(u:m.User=Depends(allow("vendor")),db:Session=Depends(get_db)):
@@ -696,7 +752,7 @@ def vendor_metrics(u:m.User=Depends(allow("vendor")),db:Session=Depends(get_db))
     total=db.scalar(select(func.count()).select_from(m.Order).where(m.Order.vendor_id==v.id)) or 0
     pending=db.scalar(select(func.count()).select_from(m.Order).where(m.Order.vendor_id==v.id,m.Order.status.in_(ACTIVE_STATUSES))) or 0
     completed=db.scalar(select(func.count()).select_from(m.Order).where(m.Order.vendor_id==v.id,m.Order.status=="completed")) or 0
-    sales=db.scalar(select(func.sum(m.Order.subtotal)).where(m.Order.vendor_id==v.id,m.Order.status!="cancelled")) or 0
+    sales=db.scalar(select(func.sum(m.Order.subtotal)).where(m.Order.vendor_id==v.id,m.Order.status=="completed")) or 0
     return {"orders":total,"pending_orders":pending,"completed_orders":completed,"sales":float(sales),"products":db.scalar(select(func.count()).select_from(m.Product).where(m.Product.vendor_id==v.id)) or 0,"status":v.status,"delivers_to_bmu":v.delivers_to_bmu,"delivery_points":json.loads(v.delivery_points_json or "[]")}
 
 @app.get("/api/student/metrics")

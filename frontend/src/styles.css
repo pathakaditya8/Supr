@@ -511,3 +511,42 @@ article.product-card .product-meta{flex-wrap:nowrap;min-width:0}
 article.product-card .product-meta .vendor-name-link{flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 article.product-card .product-meta .vendor-check,article.product-card .product-meta .meta-dot,article.product-card .product-meta .delivery-yes,article.product-card .product-meta .delivery-no,article.product-card .product-meta>span:last-child{flex:none;white-space:nowrap}
 @media(max-width:560px){.product-grid,.vendor-menu-page>.product-grid{grid-template-columns:1fr;gap:14px}article.product-card .product-photo{height:190px}}
+
+/* ===== Vendor sales page ===== */
+.metric-link{display:block;width:100%;text-align:left;font:inherit;color:inherit;cursor:pointer;transition:border-color .15s,box-shadow .15s,transform .15s}
+.metric-link:hover,.metric-link:focus-visible{border-color:var(--green);box-shadow:0 8px 22px rgba(22,63,77,.1);outline:none;transform:translateY(-2px)}
+.metric-link span{display:inline-flex;align-items:center;gap:4px;color:var(--green);font-weight:600}
+.vendor-sales{display:grid;gap:22px}
+.sales-controls{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:14px 24px}
+.segmented{display:inline-flex;padding:4px;border:1px solid #cfdcda;border-radius:999px;background:#fff}
+.segmented button{min-height:40px;padding:0 20px;border:0;border-radius:999px;background:transparent;color:#4b5a57;font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.segmented button.active{background:#155e70;color:#fff}
+.sales-range{display:flex;flex-wrap:wrap;align-items:flex-end;gap:12px}
+.sales-range label{display:grid;gap:4px;font-size:13px;color:#5f6c69}
+.sales-range input{min-height:42px;padding:0 10px;border:1px solid #cfdcda;border-radius:10px;background:#fff;font:inherit;font-size:15px;color:var(--ink)}
+.sales-chart-card,.sales-table-card{padding:20px 22px;background:#fff;border:1px solid #e1e9e7;border-radius:16px;box-shadow:0 1px 2px rgba(18,59,72,.05)}
+.sales-chart-card h2,.sales-table-card h2{margin:0 0 14px;font-size:18px;color:var(--ink)}
+.sales-chart{display:flex;align-items:flex-end;gap:4px;height:220px;padding-top:8px;overflow-x:auto}
+.sales-bar{position:relative;flex:1 0 18px;min-width:18px;max-width:64px;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center}
+.sales-bar-fill{display:block;width:100%;border-radius:6px 6px 0 0;background:linear-gradient(180deg,#2a8aa1,#155e70);min-height:0;transition:height .3s}
+.sales-bar:hover .sales-bar-fill{background:#e8a83b}
+.sales-bar-label{margin-top:6px;color:#5f6c69;font-size:11px;line-height:1.2;white-space:nowrap}
+.sales-tables{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:22px;align-items:start}
+.table-scroll{max-height:460px;overflow:auto}
+.sales-table{width:100%;border-collapse:collapse;font-size:15px}
+.sales-table th,.sales-table td{padding:10px 12px;text-align:left;border-bottom:1px solid #e9eeec}
+.sales-table th{position:sticky;top:0;background:#f3f8f7;color:#4b5a57;font-size:13px;font-weight:600}
+.sales-table .num{text-align:right;font-variant-numeric:tabular-nums}
+.sales-table tr.quiet td{color:#8a9a9d}
+.sales-table tfoot td{position:sticky;bottom:0;background:#f3f8f7;font-weight:700;border-bottom:0}
+.sales-list-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:6px}
+.sales-list-head h2{margin:0}
+.sales-list{list-style:none;margin:0;padding:0;max-height:460px;overflow:auto}
+.sales-list li{border-bottom:1px solid #e9eeec}
+.sales-list button{display:flex;align-items:center;justify-content:space-between;gap:14px;width:100%;padding:12px 6px;border:0;background:transparent;text-align:left;font:inherit;color:inherit;cursor:pointer;border-radius:8px}
+.sales-list button:hover,.sales-list button:focus-visible{background:#f3f8f7;outline:none}
+.sales-list-main,.sales-list-side{display:grid;gap:2px;min-width:0}
+.sales-list-main small{color:#5f6c69;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:36ch}
+.sales-list-side{text-align:right;flex:none}.sales-list-side small{color:#5f6c69}
+@media(max-width:900px){.sales-tables{grid-template-columns:1fr}}
+@media(max-width:520px){.segmented button{padding:0 12px;font-size:14px}.sales-chart-card,.sales-table-card{padding:16px}}

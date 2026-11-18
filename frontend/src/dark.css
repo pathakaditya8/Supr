@@ -1874,3 +1874,59 @@ html[data-theme="dark"] article.product-card .add-btn {
 html[data-theme="dark"] article.product-card .add-btn:hover:not(:disabled) {
     color: #ffffff
 }
+html[data-theme="dark"] .metric-link:hover,html[data-theme="dark"] .metric-link:focus-visible {
+    box-shadow: 0 8px 22px rgba(22,63,77,0.1)
+}
+html[data-theme="dark"] .metric-link span {
+    color: var(--text-brand)
+}
+html[data-theme="dark"] .segmented {
+    border: 1px solid #455358;
+    background: #1d2326
+}
+html[data-theme="dark"] .segmented button {
+    color: #aeb9b6
+}
+html[data-theme="dark"] .segmented button.active {
+    color: #ffffff
+}
+html[data-theme="dark"] .sales-range label {
+    color: #a4adab
+}
+html[data-theme="dark"] .sales-range input {
+    border: 1px solid #455358;
+    background: #1d2326
+}
+html[data-theme="dark"] .sales-chart-card,html[data-theme="dark"] .sales-table-card {
+    background: #1d2326;
+    border: 1px solid #354044;
+    box-shadow: 0 1px 2px rgba(18,59,72,0.05)
+}
+html[data-theme="dark"] .sales-bar-label {
+    color: #a4adab
+}
+html[data-theme="dark"] .sales-table th,html[data-theme="dark"] .sales-table td {
+    border-bottom: 1px solid #2f383b
+}
+html[data-theme="dark"] .sales-table th {
+    background: #222a2d;
+    color: #aeb9b6
+}
+html[data-theme="dark"] .sales-table tr.quiet td {
+    color: #a2acae
+}
+html[data-theme="dark"] .sales-table tfoot td {
+    background: #222a2d
+}
+html[data-theme="dark"] .sales-list li {
+    border-bottom: 1px solid #2f383b
+}
+html[data-theme="dark"] .sales-list button:hover,html[data-theme="dark"] .sales-list button:focus-visible {
+    background: #222a2d
+}
+html[data-theme="dark"] .sales-list-main small {
+    color: #a4adab
+}
+html[data-theme="dark"] .sales-list-side small {
+    color: #a4adab
+}

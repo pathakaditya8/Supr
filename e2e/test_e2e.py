@@ -670,3 +670,71 @@ def test_e2e_31_product_card_is_uncluttered_and_clear(new_page):
     unavailable = page.locator(".product-card.is-unavailable").first
     expect(unavailable.locator(".product-state")).to_have_text("Out of stock")
     expect(unavailable.get_by_role("button", name=re.compile("Add|Options"))).to_be_disabled()
+
+
+def test_e2e_32_vendor_sales_by_day_month_and_year(new_page, stack):
+    import os
+    import sqlite3
+    clear_cart(STUDENT)
+    student, kathi = token(STUDENT), token(KATHI)
+    product = next(p for p in call("GET", "/api/products?vendor_id=2&available_only=true&limit=50")["items"] if p["name"] == "Aloo Roll")
+    before = call("GET", "/api/vendor/sales?period=year", token=kathi)["totals"]       # earlier tests may already have completed orders today
+
+    def complete_order(quantity):
+        call("POST", "/api/cart/items", {"product_id": product["id"], "quantity": quantity}, token=student)
+        order = call("POST", "/api/orders", {"delivery_location": ""}, token=student)
+        for status in ("accepted", "preparing", "ready", "completed"):
+            call("PATCH", f"/api/orders/{order['id']}/status", {"status": status}, token=kathi)
+        return order
+
+    old, mid, today = complete_order(2), complete_order(3), complete_order(1)
+    with sqlite3.connect(stack.tmp / "e2e.db") as db:      # move two sales into the past (times are stored in UTC)
+        db.execute("update orders set created_at='2026-01-31 20:00:00' where id=?", (mid["id"],))   # 1 Feb 01:30 in India
+        db.execute("update orders set created_at='2025-06-10 09:00:00' where id=?", (old["id"],))
+
+    page = new_page()
+    sign_in(page, KATHI)
+    expect(page.locator(".metric-card.metric-link")).to_contain_text("View details")
+    page.get_by_role("button", name="Open your sales").click()                       # the Sales card on the overview opens the page
+    expect(page.get_by_role("heading", name="Your sales", level=1)).to_be_visible()
+    totals = page.locator(".sales-totals")
+    orders_card = totals.locator(".metric-card").nth(1).locator("b")
+    expect(totals).to_contain_text("Total sales")
+    # day wise (last 30 days): what the server says for today, and neither backdated sale
+    day = call("GET", "/api/vendor/sales?period=day", token=kathi)
+    assert {s["id"] for s in day["sales"]} >= {today["id"]} and not {old["id"], mid["id"]} & {s["id"] for s in day["sales"]}
+    expect(page.get_by_role("button", name="Day wise")).to_have_attribute("aria-pressed", "true")
+    expect(orders_card).to_have_text(str(day["totals"]["orders"]))
+    # month wise (last 12 months): February 2026 holds exactly the sale made at 01:30 India time on 1 Feb, and June 2025 is out of range
+    page.get_by_role("button", name="Month wise").click()
+    month = call("GET", "/api/vendor/sales?period=month", token=kathi)
+    expect(orders_card).to_have_text(str(month["totals"]["orders"]))
+    expect(page.locator(".sales-table tbody tr", has_text="Feb 2026")).to_contain_text("1")
+    expect(page.locator(".sales-table tbody")).not_to_contain_text("Jun 2025")
+    assert {s["id"] for s in month["sales"]} >= {mid["id"], today["id"]} and old["id"] not in {s["id"] for s in month["sales"]}
+    # year wise (last five years): every sale
+    page.get_by_role("button", name="Year wise").click()
+    year = call("GET", "/api/vendor/sales?period=year", token=kathi)
+    assert year["totals"]["orders"] == before["orders"] + 3 and year["totals"]["items"] == before["items"] + 6
+    expect(orders_card).to_have_text(str(year["totals"]["orders"]))
+    expect(page.locator(".sales-table tbody tr", has_text="2025")).to_contain_text("1")        # only the June 2025 sale is in 2025
+    expect(page.locator(".sales-table tfoot")).to_contain_text(f"{year['totals']['amount']:,.0f}")
+    expect(page.locator(".sales-chart .sales-bar")).to_have_count(5)
+    # the list of all sales; a sale opens the full order
+    expect(page.locator(".sales-list li")).to_have_count(year["totals"]["orders"])
+    page.locator(".sales-list li", has_text=f"Order #{today['id']}").get_by_role("button").click()
+    expect(page.locator(".order-detail")).to_contain_text("Aarav Mehta")
+    page.keyboard.press("Escape")
+    # a date range narrows everything
+    page.get_by_role("button", name="Month wise").click()
+    page.locator(".sales-range").get_by_label("From", exact=True).fill("2026-02-01")
+    page.locator(".sales-range").get_by_label("To", exact=True).fill("2026-02-28")
+    expect(orders_card).to_have_text("1")
+    expect(page.locator(".sales-list li")).to_have_count(1)
+    shots = os.environ.get("SUPR_SHOT_DIR")
+    if shots: page.screenshot(path=os.path.join(shots, "sales_e2e.png"), full_page=True)
+    if shots:
+        page.get_by_role("button", name="Year wise").click()
+        page.get_by_role("button", name="Switch to dark mode").click()
+        page.screenshot(path=os.path.join(shots, "sales_e2e_dark.png"), full_page=True)
+    clear_cart(STUDENT)

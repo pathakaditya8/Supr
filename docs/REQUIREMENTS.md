@@ -17,6 +17,7 @@ The supplied Supr SRS v1.0 is authoritative for system behavior and its open que
 | FR-04a | A vendor must state its number of delivery partners, at least 2, or the application cannot be submitted (checked in the form and on the server); the admin sees the number when reviewing. | Must |
 | FR-05 | Admin reviews application/document evidence; records agreement validity; approves or rejects with remarks and history. | Must |
 | FR-10a | A vendor opens any order placed with their shop to see the student's name, email and phone, the delivery handover and drop-off point, every line with size and add-ons, and the total; other vendors and other students cannot read it. | Must |
+| FR-19 | A vendor opens a Sales page from the overview and sees all sales (completed orders) with totals, order count, items sold and average order, grouped day wise, month wise or year wise (Indian time), for any date range, with a chart, a table, the list of sales (each opens the full order) and a CSV download. | Should |
 | FR-06 | Approved vendor creates, edits, pauses and removes permitted listings; manages availability and delivery flag. | Must |
 | FR-07 | A student's active cart contains items from one vendor only; enforce server-side. | Must |
 | FR-08 | Validate availability and quantity, create a persisted order request transactionally and retain item snapshots. | Must |

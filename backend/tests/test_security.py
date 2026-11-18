@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy import select
 
 from app.database import SessionLocal
-from app.models import Cart, Notification, Product, User, Vendor
+from app.models import Cart, Notification, Order, OrderItem, Product, User, Vendor
 from app.security import issue_token
 
 TEST_PASSWORD = "Test@123456"
@@ -448,3 +448,78 @@ def test_vendor_can_open_an_order_and_see_the_student_and_every_line(client):
     own = client.get(f"/api/orders/{order_id}", headers=student)
     assert own.status_code == 200 and own.json()["student"] is None
     assert client.get("/api/orders/999999", headers=kathi).status_code == 404
+
+
+def _add_order(db, student_id, vendor_id, product_id, status, amount, created, items=1, name="Aloo Roll"):
+    order = Order(student_id=student_id, vendor_id=vendor_id, status=status, campus_delivery=False, delivery_location="", delivery_stage="", subtotal=amount, created_at=created)
+    order.items.append(OrderItem(product_id=product_id, product_name=name, unit_price=amount / items, quantity=items, was_available=True, variant_name="", addons_json="[]"))
+    db.add(order); db.flush()
+    return order.id
+
+
+def test_vendor_sales_by_day_month_and_year(client):
+    from datetime import datetime
+    admin = login(client, "admin@supr.bmu.edu.in")
+    kathi_item, kathi_id = stocked_item("Kathi Junction")
+    domino_item, domino_id = stocked_item("Domino's", "Garlic Breadsticks")
+    student_id, _ = new_student(client, admin, "sales")
+    kathi, dominos = login(client, "kathijunction@supr.demo"), login(client, "dominos@supr.demo")
+    db = SessionLocal()
+    utc = datetime       # SQLite stores UTC without a zone; Indian time is UTC + 5:30
+    ids = {
+        "A": _add_order(db, student_id, kathi_id, kathi_item, "completed", 100, utc(2026, 1, 31, 20, 0), items=2),   # 1 Feb 01:30 in India
+        "B": _add_order(db, student_id, kathi_id, kathi_item, "completed", 50, utc(2026, 2, 1, 5, 0)),               # 1 Feb
+        "C": _add_order(db, student_id, kathi_id, kathi_item, "completed", 200, utc(2026, 2, 15, 10, 0), items=3),
+        "D": _add_order(db, student_id, kathi_id, kathi_item, "completed", 80, utc(2025, 12, 31, 19, 0)),            # 1 Jan 2026 00:30 in India
+        "E": _add_order(db, student_id, kathi_id, kathi_item, "completed", 120, utc(2025, 6, 10, 9, 0)),
+        "cancelled": _add_order(db, student_id, kathi_id, kathi_item, "cancelled", 999, utc(2026, 2, 15, 11, 0)),
+        "pending": _add_order(db, student_id, kathi_id, kathi_item, "pending", 500, utc(2026, 2, 16, 11, 0)),
+        "other": _add_order(db, student_id, domino_id, domino_item, "completed", 777, utc(2026, 2, 15, 12, 0), name="Garlic Breadsticks"),
+    }
+    db.commit(); db.close()
+    try:
+        def sales(headers, **params):
+            r = client.get("/api/vendor/sales", headers=headers, params=params)
+            assert r.status_code == 200, r.text
+            return r.json()
+        day = sales(kathi, period="day", start="2026-01-30", end="2026-02-16")
+        assert len(day["buckets"]) == 18                                              # every day shown, empty ones as zero
+        by = {b["key"]: b for b in day["buckets"]}
+        assert by["2026-01-31"]["amount"] == 0 and by["2026-02-01"]["amount"] == 150 and by["2026-02-01"]["orders"] == 2 and by["2026-02-01"]["items"] == 3
+        assert by["2026-02-15"]["amount"] == 200 and by["2026-02-15"]["label"] == "15 Feb 2026"
+        assert day["totals"] == {"amount": 350.0, "orders": 3, "items": 6, "average_order": 116.67}
+        assert day["best"]["key"] == "2026-02-15"
+        month = sales(kathi, period="month", start="2025-12-01", end="2026-03-31")
+        assert [(b["label"], b["amount"], b["orders"]) for b in month["buckets"]] == [("Dec 2025", 0, 0), ("Jan 2026", 80, 1), ("Feb 2026", 350, 3), ("Mar 2026", 0, 0)]
+        assert month["totals"]["amount"] == 430.0 and month["best"]["label"] == "Feb 2026"
+        year = sales(kathi, period="year", start="2025-01-01", end="2026-06-30")
+        assert [(b["label"], b["amount"]) for b in year["buckets"]] == [("2025", 120), ("2026", 430)]
+        assert year["totals"]["amount"] == 550.0 and year["totals"]["orders"] == 5
+        # the list of sales: only completed orders of this vendor, newest first, with the student and the items
+        listed = year["sales"]
+        assert [s["id"] for s in listed] == [ids["C"], ids["B"], ids["A"], ids["D"], ids["E"]]
+        assert listed[0]["student_name"] == "Security sales" and listed[0]["items"] == "Aloo Roll × 3" and listed[0]["date"] == "2026-02-15"
+        assert ids["cancelled"] not in {s["id"] for s in listed} and ids["pending"] not in {s["id"] for s in listed} and ids["other"] not in {s["id"] for s in listed}
+        # another vendor sees only their own sales
+        theirs = sales(dominos, period="month", start="2026-02-01", end="2026-02-28")
+        assert theirs["totals"]["amount"] == 777.0 and [s["id"] for s in theirs["sales"]] == [ids["other"]]
+        # the overview card counts completed orders only
+        db = SessionLocal()
+        expected = sum(float(o.subtotal) for o in db.scalars(select(Order).where(Order.vendor_id == kathi_id, Order.status == "completed")))
+        db.close()
+        assert client.get("/api/vendor/metrics", headers=kathi).json()["sales"] == expected
+        # defaults and validation
+        assert len(sales(kathi)["buckets"]) == 30 and len(sales(kathi, period="month")["buckets"]) == 12
+        assert client.get("/api/vendor/sales", headers=kathi, params={"period": "week"}).status_code == 422
+        assert client.get("/api/vendor/sales", headers=kathi, params={"start": "2026-03-01", "end": "2026-02-01"}).status_code == 422
+        assert client.get("/api/vendor/sales", headers=kathi, params={"period": "day", "start": "2024-01-01", "end": "2026-01-01"}).status_code == 422
+        assert client.get("/api/vendor/sales", headers=kathi, params={"period": "month", "start": "2010-01-01", "end": "2026-01-01"}).status_code == 422
+        assert client.get("/api/vendor/sales", headers=kathi, params={"start": "not-a-date"}).status_code == 422
+        # only vendors may read it
+        for who in (login(client, "student@supr.bmu.edu.in"), admin):
+            assert client.get("/api/vendor/sales", headers=who).status_code == 403
+        assert client.get("/api/vendor/sales").status_code in (401, 403)
+    finally:
+        db = SessionLocal()
+        for oid in ids.values(): db.delete(db.get(Order, oid))
+        db.commit(); db.close()
