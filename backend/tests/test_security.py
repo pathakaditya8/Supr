@@ -53,10 +53,11 @@ def place_order(client, student, product_id):
 
 # ---------- Registration and tokens ----------
 
-def test_self_registration_cannot_create_admin_or_student(client):
-    for role in ("admin", "student"):
-        r = client.post("/api/auth/register", json={"name": "Mallory", "email": f"mallory-{role}@supr.test", "password": TEST_PASSWORD, "role": role})
-        assert r.status_code == 403
+def test_self_registration_cannot_create_an_admin_or_a_student_without_a_bmu_address(client):
+    r = client.post("/api/auth/register", json={"name": "Mallory", "email": "mallory-admin@supr.test", "password": TEST_PASSWORD, "role": "admin"})
+    assert r.status_code == 403
+    r = client.post("/api/auth/register", json={"name": "Mallory", "email": "mallory-student@supr.test", "password": TEST_PASSWORD, "role": "student"})
+    assert r.status_code == 422
     weak = client.post("/api/auth/register", json={"name": "Weak", "email": "weak@supr.test", "password": "short", "role": "vendor"})
     assert weak.status_code == 422
     dup = client.post("/api/auth/register", json={"name": "Dup", "email": "student@supr.bmu.edu.in", "password": TEST_PASSWORD, "role": "vendor"})
@@ -320,3 +321,24 @@ def test_admin_history_names_vendors_admins_and_every_decision(client):
     assert all(r["by"] == "BMU Marketplace Admin" for r in decided)
     assert any(r["action"] == "application_submitted" and r["by"] == "Vendor" for r in mine)
     assert client.get("/api/admin/history", headers=login(client, "kathijunction@supr.demo")).status_code == 403
+
+
+def test_student_can_sign_up_only_with_name_yearcourse_bmu_address(client):
+    def sign_up(email, password=TEST_PASSWORD, name="Test Student"):
+        return client.post("/api/auth/register", json={"name": name, "email": email, "password": password, "role": "student"})
+    tag = "t" + "".join(chr(97 + int(c)) for c in str(time.time_ns())[-8:])        # letters only: the name part has no digits
+    good = f"{tag}.24cse@bmu.edu.in"
+    ok = sign_up(good.upper())                                                   # case does not matter
+    assert ok.status_code == 200, ok.text
+    assert ok.json()["user"]["role"] == "student" and ok.json()["user"]["email"] == good
+    assert login(client, good, TEST_PASSWORD)                                    # the new account can sign in
+    assert sign_up(good).status_code == 409                                      # one account per address
+    for bad in (f"{tag}24cse@bmu.edu.in", f"{tag}.24@bmu.edu.in", f"{tag}.2024cse@bmu.edu.in", f"{tag}.24cse@gmail.com",
+                f"{tag}.24cse@bmu.edu.in.evil.com", f"{tag}.24cse@mail.bmu.edu.in", "dhruv@bmu.edu.in", ".24cse@bmu.edu.in", "x" + "." + "99cse@bmu.edu.in", f"{tag}.12cse@bmu.edu.in"):
+        r = sign_up(bad)
+        assert r.status_code == 422 and "name.yearcourse@bmu.edu.in" in r.json()["detail"], bad
+    assert sign_up(f"{tag}x.24ece@bmu.edu.in", password="short").status_code == 422   # password rule still applies
+    two_part = sign_up(f"{tag}.sharma.25bba@bmu.edu.in", name="With Surname")
+    assert two_part.status_code == 200
+    students = {u["email"] for u in client.get("/api/admin/students", headers=login(client, "admin@supr.bmu.edu.in")).json()}
+    assert good in students and f"{tag}.sharma.25bba@bmu.edu.in" in students   # they appear in the admin's student list

@@ -136,10 +136,20 @@ def cart_out(cart, db):
 @app.get("/api/health")
 def health(): return {"status":"ok"}
 
+# Students sign up with their BMU address: name.yearcourse@bmu.edu.in, for example dhruv.24cse@bmu.edu.in
+STUDENT_EMAIL=re.compile(r"[a-z]+(?:[._-][a-z]+)*\.(\d{2})([a-z]{2,10})@bmu\.edu\.in")
+STUDENT_EMAIL_HELP="Use your BMU email in the form name.yearcourse@bmu.edu.in, for example dhruv.24cse@bmu.edu.in"
+FIRST_STUDENT_YEAR=13   # BMU's first intake; a later two-digit year than the current one cannot exist either
+
+def check_student_email(email):
+    found=STUDENT_EMAIL.fullmatch(email)
+    if not found or not FIRST_STUDENT_YEAR<=int(found.group(1))<=m.now_utc().year%100: raise HTTPException(422,STUDENT_EMAIL_HELP)
+
 @app.post("/api/auth/register")
 def register(data:s.RegisterIn, db:Session=Depends(get_db)):
-    if data.role != "vendor": raise HTTPException(403,"Student accounts are created by BMU administrators")
+    if data.role not in {"student","vendor"}: raise HTTPException(403,"Only student and vendor accounts can be created here")
     email=data.email.strip().lower()
+    if data.role=="student": check_student_email(email)
     if db.scalar(select(m.User).where(m.User.email==email)): raise HTTPException(409,"An account with this email already exists")
     user=m.User(name=data.name.strip(),email=email,password_hash=hash_password(data.password),role=data.role)
     db.add(user); db.flush()

@@ -10,7 +10,7 @@ These are explicitly unresolved by SRS v1.0. The following implementation choice
 | Payment handling? | Order request only; payment is handled outside this release. | Project stakeholders |
 | Notification provider and retry behavior? | Persistent in-app records only. | Project stakeholders |
 | Final field-level database schema? | Schema documented in architecture and models; review needed before production. | Project team and guide |
-| Student eligibility proof? | Account registration/authentication; no integration with student directory. | BMU IT / University Admin |
+| Student eligibility proof? | Students can sign up themselves with an address of the form `name.yearcourse@bmu.edu.in` (for example `dhruv.24cse@bmu.edu.in`); the app checks the format only. **There is no email verification**, so anyone can type another student's address, and the account cannot prove it belongs to the owner. Until BMU provides a student directory or verification email, the admin can remove or reset any account. | BMU IT / University Admin |
 | File retention and access policy? | Private local files; admin-only route; operational retention period unset. | BMU data owner |
 | Order cancellation by vendor? | Vendor may cancel only pending/accepted requests; quantities restored. | Confirm with stakeholders |
 | Vendor participation and agreement validity for the four named businesses? | Live database records admin approvals; the reset seed starts pending. Confirm the underlying agreements and current catalog details with each vendor. | BMU Admin and each vendor |

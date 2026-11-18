@@ -437,3 +437,32 @@ def test_e2e_22_clear_bag_button_empties_the_bag(new_page):
     expect(page.get_by_text("Your bag is waiting for a good find.")).to_be_visible()
     assert call("GET", "/api/cart", token=token(STUDENT))["items"] == []
     assert call("GET", "/api/cart", token=token(STUDENT))["vendor_id"] is None
+
+
+def test_e2e_23_student_signs_up_with_a_name_yearcourse_bmu_address(new_page):
+    page = new_page()
+    page.get_by_role("button", name="Account", exact=True).click()
+    page.locator(".profile-dropdown").get_by_role("button", name="Create student account").click()
+    dialog = page.locator(".form-modal")
+    expect(dialog.get_by_role("heading", name="Join your neighbourhood.")).to_be_visible()
+    expect(dialog.get_by_text("name.yearcourse@bmu.edu.in, for example dhruv.24cse@bmu.edu.in")).to_be_visible()
+    dialog.get_by_label("Your name").fill("Dhruv Test")
+    dialog.get_by_label("Password").fill("Strong-pass-123")
+    # an address that does not follow the rule is stopped by the form itself
+    dialog.get_by_label("BMU email").fill("dhruv@gmail.com")
+    dialog.get_by_role("button", name="Create student account").click()
+    expect(dialog).to_be_visible()
+    assert page.locator(".workspace-tabs").count() == 0
+    dialog.get_by_label("BMU email").fill("dhruv.24cse@bmu.edu.in")
+    dialog.get_by_role("button", name="Create student account").click()
+    expect(page.locator(".workspace-tabs")).to_contain_text("Hi, Dhruv")
+    assert call("POST", "/api/auth/login", {"email": "dhruv.24cse@bmu.edu.in", "password": "Strong-pass-123"})["user"]["role"] == "student"
+    # and the sign-in screen can switch to sign-up and back
+    page.locator(".account-btn").click()
+    page.locator(".profile-dropdown").get_by_role("button", name="Sign out").click()
+    page.get_by_role("button", name="Account", exact=True).click()
+    page.locator(".profile-dropdown").get_by_role("button", name="Sign in").click()
+    page.locator(".form-modal").get_by_role("button", name="Create a student account").click()
+    expect(page.locator(".form-modal").get_by_role("heading", name="Join your neighbourhood.")).to_be_visible()
+    page.locator(".form-modal").get_by_role("button", name="Sign in", exact=True).click()
+    expect(page.locator(".form-modal").get_by_role("heading", name="Good to see you.")).to_be_visible()

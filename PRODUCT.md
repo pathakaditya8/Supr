@@ -44,7 +44,7 @@ It is currently a **course project for CSE3005 (Software Engineering)** that **m
 - Laptop and phone shops have vendor status `listed`: visible with contact details and published prices only, never orderable. Their prices are shown only where the shop published one; otherwise "Price on request".
 - Product photos are illustrative stock photos (Unsplash, credited) grouped by dish type and diet, or a shop's own photo; the dish name on a coloured tile is the fallback.
 - Out of scope for this release: online payment, live courier tracking, native mobile apps, expansion beyond BMU, delivery fees or zones, automated legal verification of agreements.
-- **Open decisions** (not settled): which agreement document counts and how its validity is verified; agreement expiry and renewal; delivery areas, charges and fulfilment point; student eligibility proof beyond admin-created accounts; where and how it is deployed and who hosts it; whether the listed laptop and phone shops will be invited to join. See `docs/OPEN_DECISIONS.md`.
+- **Open decisions** (not settled): which agreement document counts and how its validity is verified; agreement expiry and renewal; delivery areas, charges and fulfilment point; student eligibility proof (students may sign up with a name.yearcourse@bmu.edu.in address, but ownership of the address is not verified); where and how it is deployed and who hosts it; whether the listed laptop and phone shops will be invited to join. See `docs/OPEN_DECISIONS.md`.
 
 ## Brand Commitments
 
