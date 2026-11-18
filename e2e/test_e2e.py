@@ -373,3 +373,25 @@ def test_e2e_19_admin_can_reset_a_students_and_a_vendors_password(new_page):
     vendor_user = next(a["user_id"] for a in call("GET", "/api/admin/applications", token=admin) if a["email"] == KATHI)
     for uid in (users[STUDENT], vendor_user):
         call("POST", f"/api/admin/users/{uid}/password", {"new_password": "Demo@12345"}, token=admin)
+
+
+def test_e2e_20_emptied_bag_lets_you_start_with_another_vendor_without_a_prompt(new_page):
+    clear_cart(STUDENT)
+    page = new_page()
+    sign_in(page, STUDENT)
+    open_vendor(page, "Kathi Junction")
+    add_item(page, "Aloo Roll")
+    expect(page.get_by_role("button", name="Shopping bag")).to_have_text("1")
+    page.get_by_role("button", name="Shopping bag").click()
+    page.get_by_role("button", name="−").click()                      # take the only item out of the bag
+    expect(page.get_by_role("button", name="Shopping bag")).to_have_text("0")
+    page.locator(".cart-panel .icon-btn").first.click()
+    assert call("GET", "/api/cart", token=token(STUDENT))["vendor_id"] is None
+    page.get_by_role("button", name="← Back to marketplace").click()
+    open_vendor(page, "Domino's")
+    page.get_by_placeholder(re.compile("Search Domino")).fill("Garlic Breadsticks")
+    n = len(page.dialog_messages)
+    page.get_by_role("article").filter(has=page.get_by_role("heading", name="Garlic Breadsticks", exact=True)).get_by_role("button", name="Add", exact=True).click()
+    expect(page.get_by_text("Garlic Breadsticks added to your bag")).to_be_visible()
+    assert len(page.dialog_messages) == n, "no 'clear your cart' prompt should appear for an empty bag"
+    clear_cart(STUDENT)

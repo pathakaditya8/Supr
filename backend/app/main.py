@@ -129,6 +129,7 @@ def cart_out(cart, db):
     items=[]; subtotal=Decimal("0")
     for line in cart.items:
         p=db.get(m.Product,line.product_id); addons_selected=json.loads(line.addon_ids_json or "[]"); unit,variant,addons=selected_price(db,p,line.variant_id,addons_selected); row=product_out(p,db); row["cart_item_id"]=line.id; row["quantity"]=line.quantity; row["variant_id"]=variant.id if variant else None; row["variant_name"]=variant.name if variant else ""; row["addon_ids"]=addons_selected; row["addon_names"]=[x.name for x in addons]; row["unit_price"]=float(unit); row["line_total"]=round(float(unit)*line.quantity,2); subtotal += Decimal(str(row["line_total"])); items.append(row)
+    if not items: cart.vendor_id=None
     vendor=db.get(m.Vendor,cart.vendor_id) if cart.vendor_id else None
     return {"id":cart.id,"vendor_id":cart.vendor_id,"vendor_name":vendor.business_name if vendor else None,"delivers_to_bmu":vendor.delivers_to_bmu if vendor else None,"delivery_points":json.loads(vendor.delivery_points_json or "[]") if vendor else [],"items":items,"subtotal":float(subtotal)}
 
@@ -420,7 +421,8 @@ def add_cart_item(data:s.CartLineIn,u:m.User=Depends(allow("student")),db:Sessio
     v=db.get(m.Vendor,p.vendor_id)
     if v.status!="approved": raise HTTPException(409,"This vendor is not active")
     cart=db.scalar(select(m.Cart).where(m.Cart.student_id==u.id))
-    if cart and cart.vendor_id and cart.vendor_id!=v.id: raise HTTPException(409,"Your cart can contain items from one vendor only. Clear it before switching vendors.")
+    if cart and not cart.items: cart.vendor_id=None          # an emptied cart does not stay tied to its old vendor
+    if cart and cart.items and cart.vendor_id and cart.vendor_id!=v.id: raise HTTPException(409,"Your cart can contain items from one vendor only. Clear it before switching vendors.")
     if not cart: cart=m.Cart(student_id=u.id,vendor_id=v.id); db.add(cart); db.flush()
     cart.vendor_id=v.id; line=next((x for x in cart.items if x.product_id==p.id),None)
     price,variant,addons=selected_price(db,p,data.variant_id,data.addon_ids)
@@ -446,7 +448,7 @@ def remove_cart_item(item_id:int,u:m.User=Depends(allow("student")),db:Session=D
     if not cart: raise HTTPException(404,"Cart is empty")
     line=next((x for x in cart.items if x.id==item_id),None)
     if not line: raise HTTPException(404,"Cart item not found")
-    db.delete(line); db.flush()
+    db.delete(line); db.flush(); db.expire(cart,["items"])   # reload: the deleted line is still in the in-memory list until then
     if not cart.items: cart.vendor_id=None
     db.commit(); return cart_out(cart,db)
 

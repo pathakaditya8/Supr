@@ -11,7 +11,7 @@ import pytest
 from sqlalchemy import select
 
 from app.database import SessionLocal
-from app.models import Notification, Product, User, Vendor
+from app.models import Cart, Notification, Product, User, Vendor
 from app.security import issue_token
 
 TEST_PASSWORD = "Test@123456"
@@ -287,3 +287,18 @@ def test_admin_can_set_student_and_vendor_passwords_but_nobody_else_can(client):
     admin_id = client.get("/api/auth/me", headers=admin).json()["id"]
     assert client.post(f"/api/admin/users/{admin_id}/password", headers=admin, json=new).status_code == 404          # admins use their own profile
     assert client.post("/api/admin/users/999999/password", headers=admin, json=new).status_code == 404
+
+
+def test_emptied_cart_does_not_block_switching_vendors(client, auth_headers):
+    first, _ = stocked_item("Kathi Junction")
+    second, second_vendor = stocked_item("Domino's", "Garlic Breadsticks")
+    student_id, student = new_student(client, auth_headers["admin"], "emptied")
+    cart = client.post("/api/cart/items", headers=student, json={"product_id": first, "quantity": 1}).json()
+    assert client.delete(f"/api/cart/items/{cart['items'][0]['cart_item_id']}", headers=student).status_code == 200
+    db = SessionLocal(); saved = db.scalar(select(Cart).where(Cart.student_id == student_id)); assert saved.vendor_id is None; db.close()   # removing the last item frees the cart
+    # a cart left empty but still pointing at its old vendor (an older build could leave this behind)
+    db = SessionLocal()
+    stale = db.scalar(select(Cart).where(Cart.student_id == student_id)); stale.vendor_id = stocked_item("Kathi Junction")[1]; db.commit(); db.close()
+    r = client.post("/api/cart/items", headers=student, json={"product_id": second, "quantity": 1})
+    assert r.status_code == 201, r.text
+    assert r.json()["vendor_id"] == second_vendor
