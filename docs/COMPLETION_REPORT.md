@@ -92,4 +92,4 @@ State of the repository on **2026-11-17**. It describes what is implemented and 
 - 2026-11-18: Admin can set a new password for a student or vendor who forgot theirs; show/hide on temporary passwords; vendors can tick "All campus places". 65 API and 19 browser tests pass.
 - 2026-11-18: Laptop and phone services get their own photos (22 new rules, 22 photos fetched); `app.sync_photos` copies photos to the hosted database; admin reset-password row fixed to equal button heights.
 - 2026-11-18: Fixed a cart bug: removing the last item left the cart tied to its old vendor, so adding from another vendor asked to "clear your existing cart" even though the bag showed 0. Fixed in the remove handler and the add check; API and browser tests added (66 API, 20 browser tests pass).
-- 2026-11-18: Approval history rebuilt as a readable timeline with vendor filter and per-vendor history on each vendor card. 67 API and 21 browser tests pass.
+- 2026-11-18: Approval history rebuilt as a readable timeline with vendor filter and per-vendor history on each vendor card. 67 API and 22 browser tests pass; the bag has a Clear bag button.

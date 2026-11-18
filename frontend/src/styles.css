@@ -437,3 +437,6 @@ body{font-size:16px}
 .history-remarks{margin:8px 0 0;color:#38413f;font-size:14px;line-height:1.5}
 .vendor-history-panel{flex-basis:100%;width:100%;margin-top:8px;padding:16px 16px 0;background:#f7faf9;border:1px solid #e1e9e7;border-radius:12px}
 .application-actions{flex-wrap:wrap}
+
+.clear-bag-btn{display:inline-flex;align-items:center;gap:6px;align-self:flex-start;margin:10px 0 0;padding:8px 12px;border:1px solid #e6c9c5;border-radius:10px;background:#fff;color:#b42318;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
+.clear-bag-btn:hover{background:#fdf0ee}

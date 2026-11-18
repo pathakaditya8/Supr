@@ -418,3 +418,22 @@ def test_e2e_21_admin_sees_a_readable_approval_history_per_vendor(new_page):
     expect(card.locator(".vendor-history-panel")).to_contain_text("Application submitted")
     card.get_by_role("button", name="Hide history").click()
     expect(card.locator(".vendor-history-panel")).to_have_count(0)
+
+
+def test_e2e_22_clear_bag_button_empties_the_bag(new_page):
+    clear_cart(STUDENT)
+    page = new_page()
+    sign_in(page, STUDENT)
+    open_vendor(page, "Kathi Junction")
+    add_item(page, "Aloo Roll")
+    expect(page.get_by_role("button", name="Shopping bag")).to_have_text("1")
+    page.get_by_role("button", name="Shopping bag").click()
+    page.dialog_answer = False                                         # cancel keeps the bag
+    page.get_by_role("button", name="Clear bag").click()
+    wait_for_dialog(page, 1)
+    assert len(call("GET", "/api/cart", token=token(STUDENT))["items"]) == 1
+    page.dialog_answer = True
+    page.get_by_role("button", name="Clear bag").click()
+    expect(page.get_by_text("Your bag is waiting for a good find.")).to_be_visible()
+    assert call("GET", "/api/cart", token=token(STUDENT))["items"] == []
+    assert call("GET", "/api/cart", token=token(STUDENT))["vendor_id"] is None
