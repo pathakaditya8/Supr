@@ -77,3 +77,7 @@ If Render's log shows a PostgreSQL error on start-up, send me the lines around t
 - There is no email, so there is no password reset: the admin must reset passwords.
 - Set a custom domain and keep `SECRET_KEY` private; changing it signs everyone out.
 - The free database expires after 30 days: upgrade or export before then.
+
+## Dark mode and the generated stylesheet
+
+`frontend/src/dark.css` is generated from `styles.css`. After changing colours in `styles.css`, run `npm run dark-css` from `frontend/` and commit the result. Hand fixes for the dark theme go in `frontend/src/dark-overrides.css`, which is never overwritten.

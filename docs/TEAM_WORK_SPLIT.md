@@ -24,7 +24,7 @@ This is a **plan for who owns what**, not a record of who did what, so it claims
 | **M4 Vendor shop management** | Vendor dashboard, adding and editing listings, item photos, stock and bulk in or out of stock, delivery places and the "All campus places" option, vendor orders screen and the order details dialog | 14 | Anshika |
 | **M5 Cart, orders and tracking** | One-vendor bag and Clear bag, review and place order, server-side prices, stock locking, order lifecycle and delivery stages, Your orders, Order history, student and vendor order notifications | 17 | Aditya |
 | **M6 Admin console** | Admin overview and counts, Students (add, remove, temporary password with show or hide), Food listings and Tech listings pages, admin add or edit of listings, notifications | 10 | Anshika |
-| **M7 Look, language and content** | Brand, logo and door intro, header and footer, English and Hindi switch, About, Help and How it works, responsive layouts, dish and shop photo system (credited Unsplash photos) | 10 | Aakriti |
+| **M7 Look, language and content** | Brand, logo and door intro, header and footer, English and Hindi switch, dark mode, About, Help and How it works, responsive layouts, dish and shop photo system (credited Unsplash photos) | 10 | Aakriti |
 | **M8 Data, deployment and operations** | Database models and migrations, menu and shop imports, `copy_data` and `sync_photos`, Render and Vercel setup, keep-awake ping, backups | 8 | Aditya |
 | **M9 Test and project evidence** | Central test plan and traceability, security scans, lint, planned-versus-actual tracking, burndown and retrospectives | 6 | Anshika 3, Aditya 2, Aakriti 1 |
 | | **Total** | **108** | |
@@ -41,7 +41,7 @@ Every module owner also writes the tests and updates the documents for their own
 | M4 | `/api/vendor/products*`, `/api/vendor/delivery-points`, bulk availability, product images | `VendorDeliveryManager`, `BulkAvailabilityBar`, `VendorPhotoButton`, vendor listing screens | `test_api.py`, E2E 5, 16 |
 | M5 | `/api/cart*`, `/api/orders*`, arrival and status updates | The bag, `OrderTracker`, `StudentActiveOrders`, `StudentOrderHistory` | `test_order_tracking.py`, `test_api.py`, E2E 2, 3, 20, 22, 27 |
 | M6 | `/api/admin/metrics`, `/api/admin/students`, `/api/admin/listings` | `AdminStudents`, `AdminProductForm`, admin listing tabs | `test_security.py` (listings split), E2E 25 |
-| M7 | `dish_photos.py`, `vendor_images.py`, `import_unsplash_photos.py` | `SuprLogo`, `DoorIntro`, `DishPhoto`, `i18n.ts`, `styles.css`, About | `test_dish_photos.py`, `test_section_photos.py`, E2E 9, 10 |
+| M7 | `dish_photos.py`, `vendor_images.py`, `import_unsplash_photos.py` | `SuprLogo`, `DoorIntro`, `DishPhoto`, `i18n.ts`, `styles.css`, About | `test_dish_photos.py`, `test_section_photos.py`, E2E 9, 10, 29, 30 |
 | M8 | `models.py`, `migrations/`, `seed.py`, `import_*.py`, `copy_data.py`, `sync_photos.py`, `keepalive.py`, `render.yaml` | `vercel.json` | `test_security.py` (keep-alive) |
 | M9 | `ruff.toml`, scans | `eslint.config.js` | `perf/load_test.py`, `docs/TEST_PLAN.md` |
 

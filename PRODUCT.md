@@ -71,4 +71,4 @@ It is currently a **course project for CSE3005 (Software Engineering)** that **m
 
 ## Accessibility & Inclusion
 
-English and Hindi are both required; no further standard (such as WCAG level) has been committed yet.
+English and Hindi are both required; no further standard (such as WCAG level) has been committed yet. A dark theme is available (header button, remembered, defaults to the device setting) and was checked page by page for text contrast.

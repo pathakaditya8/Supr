@@ -1,0 +1,13 @@
+/* Dark theme: base colours and hand-made fixes. The rest is generated into dark.css (npm run dark-css). */
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --ink:#e6eef0;--muted:#9fb0b4;--line:#2a3b40;
+  --green:#1b7088;--light-green:#1b2d32;--cream:#0e1618;--gold:#e8a83b;--text-brand:#7cc4d4;
+  color:var(--ink);background:var(--cream)
+}
+html[data-theme="dark"] body{background:var(--cream);color:var(--ink)}
+html[data-theme="dark"] img{filter:brightness(.92)}
+html[data-theme="dark"] ::placeholder{color:#7f9095}
+html[data-theme="dark"] .footer-legal{background:transparent;border:1px solid #2f4a52;color:#b8c9cc}
+html[data-theme="dark"] .footer-legal:hover{background:#1b2d32}
+html[data-theme="dark"] .avatar-stack span{color:#3a2f26;border-color:var(--cream)}

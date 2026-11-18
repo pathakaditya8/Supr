@@ -10,6 +10,7 @@ The supplied Supr SRS v1.0 is authoritative for system behavior and its open que
 |---|---|---|
 | FR-01 | Authenticate student, vendor and University Admin; enforce role boundaries. | Must |
 | FR-01a | Students create their own account with a BMU address of the form name.yearcourse@bmu.edu.in (format checked; admins can still create and remove student accounts). Not verified by email. | Should |
+| FR-18 | The site offers a light and a dark theme: a header button switches them, the choice is remembered, and the first visit follows the device's setting. | Could |
 | FR-02 | Browse only available listings from approved, active vendors; search, category/price filter and sort. | Must |
 | FR-03 | Display vendor identity and BMU delivery availability at discovery and order review. | Must |
 | FR-04 | Accept vendor business application information and supporting documents. | Must |

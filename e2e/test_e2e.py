@@ -604,3 +604,48 @@ def test_e2e_28_menu_categories_start_with_meals_and_snacks_and_are_food_only(ne
     names = chips.all_inner_texts()
     assert not any("Laptop" in n or "Phone" in n for n in names), names
     assert names[3:] == sorted(names[3:])                                   # the rest stay A to Z
+
+
+def _luminance(css_color):
+    nums = [float(x) for x in re.findall(r"[\d.]+", css_color)[:3]]
+    lin = [(v / 255 / 12.92) if v / 255 <= 0.03928 else (((v / 255) + 0.055) / 1.055) ** 2.4 for v in nums]
+    return 0.2126 * lin[0] + 0.7152 * lin[1] + 0.0722 * lin[2]
+
+
+def test_e2e_29_dark_mode_toggle_is_remembered(new_page):
+    page = new_page()
+    assert page.evaluate("document.documentElement.dataset.theme") == "light"
+    light_bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
+    page.get_by_role("button", name="Switch to dark mode").click()
+    assert page.evaluate("document.documentElement.dataset.theme") == "dark"
+    dark_bg = page.evaluate("getComputedStyle(document.body).backgroundColor")
+    assert _luminance(light_bg) > 0.6 and _luminance(dark_bg) < 0.1, (light_bg, dark_bg)
+    # body text and a card stay readable: light text on a dark surface
+    text = page.evaluate("getComputedStyle(document.querySelector('h1')).color")
+    assert _luminance(text) > 0.4
+    card_bg = page.evaluate("getComputedStyle(document.querySelector('.vendor-listing-card, .listing-tile, .product-card, .market-section, .footer')).backgroundColor")
+    assert _luminance(card_bg) < 0.25
+    expect(page.get_by_role("button", name="Switch to light mode")).to_have_attribute("aria-pressed", "true")
+    page.reload()
+    page.locator(".door-intro").wait_for(state="detached", timeout=15_000)
+    assert page.evaluate("document.documentElement.dataset.theme") == "dark"         # remembered, and set before the page paints
+    assert page.evaluate("localStorage.getItem('supr_theme')") == "dark"
+    page.get_by_role("button", name="Switch to light mode").click()
+    assert page.evaluate("document.documentElement.dataset.theme") == "light"
+    assert _luminance(page.evaluate("getComputedStyle(document.body).backgroundColor")) > 0.6
+
+
+def test_e2e_30_dark_mode_follows_the_system_setting_until_the_user_chooses(browser):
+    from stack import WEB
+    for scheme, expected in (("dark", "dark"), ("light", "light")):
+        context = browser.new_context(color_scheme=scheme, viewport={"width": 1280, "height": 900})
+        page = context.new_page()
+        page.goto(WEB, wait_until="domcontentloaded")
+        assert page.evaluate("document.documentElement.dataset.theme") == expected
+        context.close()
+    context = browser.new_context(color_scheme="dark", viewport={"width": 1280, "height": 900})   # an explicit choice beats the system
+    page = context.new_page()
+    page.add_init_script("localStorage.setItem('supr_theme', 'light')")
+    page.goto(WEB, wait_until="domcontentloaded")
+    assert page.evaluate("document.documentElement.dataset.theme") == "light"
+    context.close()
