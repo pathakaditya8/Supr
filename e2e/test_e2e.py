@@ -263,6 +263,7 @@ def test_e2e_13_account_menu_when_signed_out(new_page):
     expect(menu.get_by_role("button", name="Sign in")).to_be_visible()
     expect(menu.get_by_role("button", name="Join the marketplace")).to_be_visible()
     expect(menu.get_by_role("button", name="Sign out")).to_have_count(0)
+    expect(menu.get_by_role("button", name="Create student account")).to_have_count(0)
     menu.get_by_role("button", name="Sign in").click()
     expect(page.get_by_label("BMU email")).to_be_visible()
 
@@ -442,7 +443,10 @@ def test_e2e_22_clear_bag_button_empties_the_bag(new_page):
 def test_e2e_23_student_signs_up_with_a_name_yearcourse_bmu_address(new_page):
     page = new_page()
     page.get_by_role("button", name="Account", exact=True).click()
-    page.locator(".profile-dropdown").get_by_role("button", name="Create student account").click()
+    menu = page.locator(".profile-dropdown")
+    expect(menu.get_by_role("button", name="Create student account")).to_have_count(0)     # not in the account menu...
+    menu.get_by_role("button", name="Sign in").click()
+    page.locator(".form-modal").get_by_role("button", name="Create a student account").click()   # ...only inside the sign-in window
     dialog = page.locator(".form-modal")
     expect(dialog.get_by_role("heading", name="Join your neighbourhood.")).to_be_visible()
     expect(dialog.get_by_text("name.yearcourse@bmu.edu.in, for example dhruv.24cse@bmu.edu.in")).to_be_visible()
@@ -524,3 +528,34 @@ def test_e2e_25_admin_food_listings_are_food_only_and_tech_has_its_own_page(new_
     assert foods and not any("Laptop" in c or "Phone" in c for c in foods)
     vendors = form.get_by_label("Vendor").locator("option").all_inner_texts()
     assert not any("listed" in v for v in vendors)
+
+
+def test_e2e_26_vendor_application_needs_at_least_two_delivery_partners(new_page):
+    call("POST", "/api/auth/register", {"name": "Two Riders Cafe", "email": "tworiders@supr.test", "password": "Strong-pass-123", "role": "vendor"})
+    page = new_page()
+    sign_in(page, "tworiders@supr.test", "Strong-pass-123")
+    tab(page, "Application")
+    form = page.locator(".inline-application")
+    form.get_by_label("business name").fill("Two Riders Cafe")
+    form.get_by_label("phone").fill("9000000003")
+    form.get_by_label("description").fill("Chai and snacks")
+    form.get_by_label("business address").fill("Near BMU main gate")
+    form.get_by_label("contact person").fill("Owner")
+    partners = form.get_by_label("Number of delivery partners")
+    submit = form.get_by_role("button", name="Submit application")
+    expect(partners).to_be_visible()
+    expect(submit).to_be_disabled()                                   # empty
+    partners.fill("1")
+    expect(submit).to_be_disabled()                                   # one is not enough
+    partners.fill("2")
+    expect(submit).to_be_enabled()
+    submit.click()
+    expect(page.get_by_text("Application submitted for review")).to_be_visible()
+    admin = token(ADMIN)
+    row = next(a for a in call("GET", "/api/admin/applications", token=admin) if a["email"] == "tworiders@supr.test")
+    assert row["status"] == "pending" and row["delivery_partners"] == 2
+    page.locator(".account-btn").click()
+    page.locator(".profile-dropdown").get_by_role("button", name="Sign out").click()
+    sign_in(page, ADMIN)
+    tab(page, "Applications")
+    expect(page.locator(".application-card").filter(has_text="Two Riders Cafe")).to_contain_text("Delivery partners: 2")

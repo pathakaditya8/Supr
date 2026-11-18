@@ -64,6 +64,7 @@ erDiagram
         text business_address
         string contact_person
         string agreement_reference
+        int delivery_partners "at least 2 to apply; null for older applications"
         string status "pending, approved, rejected"
         datetime submitted_at
         datetime decision_at

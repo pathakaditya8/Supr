@@ -1,6 +1,8 @@
 from typing import Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+
+MIN_DELIVERY_PARTNERS = 2   # a vendor must have at least this many delivery partners to apply
 
 
 class RegisterIn(BaseModel):
@@ -28,6 +30,13 @@ class ApplicationIn(BaseModel):
     business_address: str = Field(min_length=4, max_length=1000)
     contact_person: str = Field(min_length=2, max_length=120)
     agreement_reference: str = Field(default="", max_length=160)
+    delivery_partners: int = Field(le=500)
+
+    @field_validator("delivery_partners")
+    @classmethod
+    def at_least_two_delivery_partners(cls, value):
+        if value < MIN_DELIVERY_PARTNERS: raise ValueError(f"At least {MIN_DELIVERY_PARTNERS} delivery partners are required to apply")
+        return value
 class ProductIn(BaseModel):
     name: str = Field(min_length=2, max_length=160)
     description: str = Field(default="", max_length=3000)

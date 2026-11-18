@@ -13,6 +13,7 @@ The supplied Supr SRS v1.0 is authoritative for system behavior and its open que
 | FR-02 | Browse only available listings from approved, active vendors; search, category/price filter and sort. | Must |
 | FR-03 | Display vendor identity and BMU delivery availability at discovery and order review. | Must |
 | FR-04 | Accept vendor business application information and supporting documents. | Must |
+| FR-04a | A vendor must state its number of delivery partners, at least 2, or the application cannot be submitted (checked in the form and on the server); the admin sees the number when reviewing. | Must |
 | FR-05 | Admin reviews application/document evidence; records agreement validity; approves or rejects with remarks and history. | Must |
 | FR-06 | Approved vendor creates, edits, pauses and removes permitted listings; manages availability and delivery flag. | Must |
 | FR-07 | A student's active cart contains items from one vendor only; enforce server-side. | Must |

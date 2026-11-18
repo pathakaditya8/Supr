@@ -52,6 +52,7 @@ class VendorApplication(Base):
     business_address: Mapped[str] = mapped_column(Text)
     contact_person: Mapped[str] = mapped_column(String(120))
     agreement_reference: Mapped[str] = mapped_column(String(160), default="")
+    delivery_partners: Mapped[int | None] = mapped_column(Integer, nullable=True)   # riders or partners available to deliver; at least 2 when applying
     status: Mapped[str] = mapped_column(String(20), default="pending", index=True)
     submitted_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=now_utc)
     decision_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

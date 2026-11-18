@@ -16,13 +16,14 @@ from . import keepalive
 from . import models as m
 from . import schemas as s
 from .config import ALLOWED_ORIGINS, UPLOAD_DIR
-from .database import Base, engine, get_db
+from .database import Base, engine, ensure_columns, get_db
 from .security import hash_password, issue_token, read_token, verify_password
 
 
 @asynccontextmanager
 async def lifespan(app):
     Base.metadata.create_all(bind=engine)
+    ensure_columns()
     url = keepalive.target_url()
     task = asyncio.create_task(keepalive.run(url)) if url else None
     yield
@@ -259,9 +260,9 @@ def submit_application(data:s.ApplicationIn,u:m.User=Depends(allow("vendor")),db
     if existing and existing.status=="pending": raise HTTPException(409,"An application is already awaiting review")
     v.business_name=data.business_name.strip(); v.phone=data.phone.strip(); v.description=data.description.strip(); v.status="pending"
     if existing:
-        application=existing; application.business_address=data.business_address; application.contact_person=data.contact_person; application.agreement_reference=data.agreement_reference; application.status="pending"; application.decision_at=None; application.decision_remarks=""
+        application=existing; application.business_address=data.business_address; application.contact_person=data.contact_person; application.agreement_reference=data.agreement_reference; application.delivery_partners=data.delivery_partners; application.status="pending"; application.decision_at=None; application.decision_remarks=""
     else:
-        application=m.VendorApplication(vendor_id=v.id,business_address=data.business_address,contact_person=data.contact_person,agreement_reference=data.agreement_reference); db.add(application)
+        application=m.VendorApplication(vendor_id=v.id,business_address=data.business_address,contact_person=data.contact_person,agreement_reference=data.agreement_reference,delivery_partners=data.delivery_partners); db.add(application)
     db.flush(); notify(db,u.id,"application_submitted","Your vendor application is awaiting University review.")
     notify_admins(db,"application_submitted",f"{v.business_name} sent a vendor application for review."); db.commit()
     return {"id":application.id,"status":application.status,"submitted_at":application.submitted_at}
@@ -568,11 +569,11 @@ def admin_applications(status:str|None=None,u:m.User=Depends(allow("admin")),db:
     stmt=select(m.VendorApplication).join(m.Vendor)
     if status: stmt=stmt.where(m.VendorApplication.status==status)
     rows=db.scalars(stmt.order_by(m.VendorApplication.submitted_at.desc())).all()
-    result=[{"id":a.id,"vendor_id":a.vendor_id,"user_id":a.vendor.user_id,"business_name":a.vendor.business_name,"email":a.vendor.user.email,"phone":a.vendor.phone,"description":a.vendor.description,"minimum_order_amount":float(a.vendor.minimum_order_amount) if a.vendor.minimum_order_amount is not None else None,"delivery_terms_note":a.vendor.delivery_terms_note,"terms_confirmed":a.vendor.terms_confirmed,"business_address":a.business_address,"contact_person":a.contact_person,"agreement_reference":a.agreement_reference,"agreement_valid":a.vendor.agreement_valid,"vendor_status":a.vendor.status,"status":a.status,"decision_remarks":a.decision_remarks,"submitted_at":a.submitted_at,"documents":[{"id":d.id,"filename":d.filename,"url":f"/api/admin/documents/{d.id}"} for d in db.scalars(select(m.VendorDocument).where(m.VendorDocument.application_id==a.id))]} for a in rows]
+    result=[{"id":a.id,"vendor_id":a.vendor_id,"user_id":a.vendor.user_id,"business_name":a.vendor.business_name,"email":a.vendor.user.email,"phone":a.vendor.phone,"description":a.vendor.description,"minimum_order_amount":float(a.vendor.minimum_order_amount) if a.vendor.minimum_order_amount is not None else None,"delivery_terms_note":a.vendor.delivery_terms_note,"terms_confirmed":a.vendor.terms_confirmed,"business_address":a.business_address,"contact_person":a.contact_person,"agreement_reference":a.agreement_reference,"delivery_partners":a.delivery_partners,"agreement_valid":a.vendor.agreement_valid,"vendor_status":a.vendor.status,"status":a.status,"decision_remarks":a.decision_remarks,"submitted_at":a.submitted_at,"documents":[{"id":d.id,"filename":d.filename,"url":f"/api/admin/documents/{d.id}"} for d in db.scalars(select(m.VendorDocument).where(m.VendorDocument.application_id==a.id))]} for a in rows]
     if status in (None,"unapplied"):          # vendors who registered but have not sent their business details yet
         waiting=db.scalars(select(m.Vendor).join(m.User,m.Vendor.user_id==m.User.id).where(m.Vendor.status=="unapplied").order_by(m.User.created_at.desc())).all()
         result+=[{"id":-v.id,"vendor_id":v.id,"user_id":v.user_id,"business_name":v.business_name,"email":v.user.email,"phone":v.phone,"description":v.description,"minimum_order_amount":None,"delivery_terms_note":"","terms_confirmed":False,
-                  "business_address":"","contact_person":"","agreement_reference":"","agreement_valid":None,"vendor_status":"unapplied","status":"unapplied","decision_remarks":"","submitted_at":v.user.created_at,"documents":[]} for v in waiting]
+                  "business_address":"","contact_person":"","agreement_reference":"","delivery_partners":None,"agreement_valid":None,"vendor_status":"unapplied","status":"unapplied","decision_remarks":"","submitted_at":v.user.created_at,"documents":[]} for v in waiting]
     return result
 
 @app.get("/api/admin/documents/{doc_id}")

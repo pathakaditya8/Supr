@@ -18,6 +18,7 @@ All cases live in `backend/tests/test_api.py` and run against a freshly seeded S
 |---|---|---|---|
 | T-AUTH-02 | FR-01 | `test_change_password_requires_current_password_and_works`, `test_admin_can_set_student_and_vendor_passwords_but_nobody_else_can`, E2E 14, 15, 17, 19 | A wrong current password, a short or unchanged password is refused; the old password stops working; only an admin can set another person's password |
 | T-AUTH-03 | FR-01a | `test_student_can_sign_up_only_with_name_yearcourse_bmu_address`, E2E 23 | A valid name.yearcourse@bmu.edu.in address creates a student who can sign in; other formats, other domains, impossible years and duplicates are refused |
+| T-GOV-02 | FR-04a | `test_application_needs_at_least_two_delivery_partners`, E2E 26 | A missing, 0, 1, negative, non-number or absurd count is refused and nothing is submitted; 2 is accepted and the admin sees it; the submit button stays disabled below 2 |
 | T-AUTH-01 | FR-01 | `test_login_and_invalid_login` | Valid login returns 200; wrong password returns a generic 401 |
 | T-GOV-01 | FR-04, FR-05, FR-13 | `test_real_vendor_profiles_are_pending_and_not_public` | All four seeded vendors start as pending applications and no vendor is publicly listed |
 | T-MKT-01 | FR-02, FR-10, FR-13 | `test_menu_hidden_until_vendor_approved_then_visible_but_not_orderable` | A pending vendor's menu is hidden (list and detail 404); after approval the menu is visible at zero stock, excluded from in-stock filters and recommendations, cannot be added to a cart; an admin-paused item is hidden again |

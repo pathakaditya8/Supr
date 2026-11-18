@@ -362,7 +362,7 @@ def test_new_vendor_is_visible_to_the_admin_straight_after_registering(client):
     assert any("New vendor registered" in n["message"] and name in n["message"] for n in notes)
     # 3. sending the application turns it into a pending application and notifies the admin again
     vendor = login(client, email, TEST_PASSWORD)
-    sent = client.post("/api/vendor/applications", headers=vendor, json={"business_name": name, "phone": "9000000001", "description": "Snacks", "business_address": "Near BMU gate", "contact_person": "Owner Name"})
+    sent = client.post("/api/vendor/applications", headers=vendor, json={"business_name": name, "phone": "9000000001", "description": "Snacks", "business_address": "Near BMU gate", "contact_person": "Owner Name", "delivery_partners": 2})
     assert sent.status_code in (200, 201), sent.text
     after = client.get("/api/admin/applications", headers=admin).json()
     assert [a["status"] for a in after if a["business_name"] == name] == ["pending"]          # no duplicate "unapplied" row
@@ -398,3 +398,24 @@ def test_admin_cannot_mix_food_and_tech_when_adding_a_listing(client):
     assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": tech_vendor, "category_id": cats["Fast Food"]}).status_code == 422
     assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": tech_vendor, "category_id": cats["Phone Repair"]}).status_code == 201
     assert client.post("/api/admin/listings", headers=admin, json={**body, "vendor_id": food_vendor, "category_id": cats["Fast Food"]}).status_code == 201
+
+
+def test_application_needs_at_least_two_delivery_partners(client):
+    admin = login(client, "admin@supr.bmu.edu.in")
+    email = f"partners-{time.time_ns()}@supr.test"
+    assert client.post("/api/auth/register", json={"name": "Partner Test Foods", "email": email, "password": TEST_PASSWORD, "role": "vendor"}).status_code == 200
+    vendor = login(client, email, TEST_PASSWORD)
+    form = {"business_name": "Partner Test Foods", "phone": "9000000002", "description": "Snacks", "business_address": "Near BMU gate", "contact_person": "Owner Name"}
+    missing = client.post("/api/vendor/applications", headers=vendor, json=form)
+    assert missing.status_code == 422 and missing.json()["detail"][0]["loc"][-1] == "delivery_partners"
+    for count in (0, 1, -3):
+        r = client.post("/api/vendor/applications", headers=vendor, json={**form, "delivery_partners": count})
+        assert r.status_code == 422 and "At least 2 delivery partners" in r.json()["detail"][0]["msg"], count
+    for bad in ("two", 2.5, None, 100000):
+        assert client.post("/api/vendor/applications", headers=vendor, json={**form, "delivery_partners": bad}).status_code == 422, bad
+    row = next(a for a in client.get("/api/admin/applications", headers=admin).json() if a["email"] == email)
+    assert row["status"] == "unapplied"                                  # nothing was submitted by the refused attempts
+    ok = client.post("/api/vendor/applications", headers=vendor, json={**form, "delivery_partners": 2})
+    assert ok.status_code == 201, ok.text
+    row = next(a for a in client.get("/api/admin/applications", headers=admin).json() if a["email"] == email)
+    assert row["status"] == "pending" and row["delivery_partners"] == 2    # the admin can see the number
